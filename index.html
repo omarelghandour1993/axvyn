@@ -317,315 +317,77 @@
       <div id="ttsMsg" class="msg"></div>
     </div>
   </div>
+<!-- Tool 4: SRT Subtitle Translator -->
+<div class="card">
+  <div class="card-header">📝 Translate SRT Subtitles (Max 5 MB)</div>
 
-  // ===== TOOL 4: SRT Subtitle Translator =====
+  <div class="card-body">
+    <label for="srtFile">Select SRT File:</label>
+    <input
+      type="file"
+      id="srtFile"
+      accept=".srt,text/plain"
+    />
 
-let srtTranslationCancelled = false;
+    <label for="sourceLang">Subtitle Language:</label>
+    <select id="sourceLang">
+      <option value="ar" selected>Arabic</option>
+      <option value="en">English</option>
+      <option value="es">Spanish</option>
+      <option value="fr">French</option>
+      <option value="de">German</option>
+      <option value="pt">Portuguese</option>
+      <option value="ru">Russian</option>
+      <option value="zh-CN">Chinese</option>
+      <option value="hi">Hindi</option>
+      <option value="ja">Japanese</option>
+      <option value="ko">Korean</option>
+      <option value="it">Italian</option>
+      <option value="nl">Dutch</option>
+      <option value="pl">Polish</option>
+      <option value="tr">Turkish</option>
+    </select>
 
-function sleep(milliseconds) {
-  return new Promise(function(resolve) {
-    setTimeout(resolve, milliseconds);
-  });
-}
+    <label for="targetLang">Translate To:</label>
+    <select id="targetLang">
+      <option value="en" selected>English</option>
+      <option value="ar">Arabic</option>
+      <option value="es">Spanish</option>
+      <option value="fr">French</option>
+      <option value="de">German</option>
+      <option value="pt">Portuguese</option>
+      <option value="ru">Russian</option>
+      <option value="zh-CN">Chinese</option>
+      <option value="hi">Hindi</option>
+      <option value="ja">Japanese</option>
+      <option value="ko">Korean</option>
+      <option value="it">Italian</option>
+      <option value="nl">Dutch</option>
+      <option value="pl">Polish</option>
+      <option value="tr">Turkish</option>
+    </select>
 
-function decodeHtmlEntities(text) {
-  const textarea = document.createElement('textarea');
-  textarea.innerHTML = text;
-  return textarea.value;
-}
+    <button
+      type="button"
+      id="translateSrtButton"
+      onclick="translateSrt()"
+    >
+      Translate &amp; Download
+    </button>
 
-function parseSrt(content) {
-  const normalizedContent = content
-    .replace(/^\uFEFF/, '')
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .trim();
+    <button
+      type="button"
+      id="cancelSrtButton"
+      class="secondary"
+      onclick="cancelSrtTranslation()"
+      style="display: none;"
+    >
+      Cancel
+    </button>
 
-  if (!normalizedContent) {
-    return [];
-  }
-
-  const blocks = normalizedContent.split(/\n{2,}/);
-  const subtitles = [];
-
-  blocks.forEach(function(block) {
-    const lines = block.split('\n');
-
-    if (lines.length < 3) {
-      return;
-    }
-
-    const index = lines[0].trim();
-    const timing = lines[1].trim();
-    const textLines = lines.slice(2);
-
-    if (!/^\d+$/.test(index)) {
-      return;
-    }
-
-    if (!timing.includes('-->')) {
-      return;
-    }
-
-    const text = textLines.join('\n').trim();
-
-    if (!text) {
-      return;
-    }
-
-    subtitles.push({
-      index: index,
-      timing: timing,
-      text: text
-    });
-  });
-
-  return subtitles;
-}
-
-function buildSrt(subtitles) {
-  return subtitles.map(function(subtitle, index) {
-    return (
-      (index + 1) +
-      '\n' +
-      subtitle.timing +
-      '\n' +
-      subtitle.text
-    );
-  }).join('\n\n') + '\n\n';
-}
-
-async function fetchWithTimeout(url, options, timeout) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(function() {
-    controller.abort();
-  }, timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-
-    return response;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function translateSubtitleText(text, targetLanguage) {
-  const apiUrl =
-    'https://api.mymemory.translated.net/get' +
-    '?q=' + encodeURIComponent(text) +
-    '&langpair=' + encodeURIComponent('auto|' + targetLanguage);
-
-  let lastError = null;
-
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const response = await fetchWithTimeout(
-        apiUrl,
-        {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json'
-          }
-        },
-        20000
-      );
-
-      if (!response.ok) {
-        throw new Error('Translation service returned HTTP ' + response.status);
-      }
-
-      const data = await response.json();
-
-      if (
-        data.responseStatus &&
-        String(data.responseStatus) !== '200'
-      ) {
-        throw new Error(
-          data.responseDetails || 'Translation service rejected the request'
-        );
-      }
-
-      if (
-        !data.responseData ||
-        typeof data.responseData.translatedText !== 'string'
-      ) {
-        throw new Error('Invalid response from translation service');
-      }
-
-      const translatedText = decodeHtmlEntities(
-        data.responseData.translatedText
-      ).trim();
-
-      if (!translatedText) {
-        throw new Error('The translation service returned empty text');
-      }
-
-      return translatedText;
-    } catch (error) {
-      lastError = error;
-
-      if (error.name === 'AbortError') {
-        lastError = new Error('Translation request timed out');
-      }
-
-      if (attempt < 3) {
-        await sleep(1000 * attempt);
-      }
-    }
-  }
-
-  throw lastError || new Error('Translation failed');
-}
-
-function setSrtTranslationBusy(isBusy) {
-  const translateButton = document.getElementById('translateSrtButton');
-  const cancelButton = document.getElementById('cancelSrtButton');
-
-  if (translateButton) {
-    translateButton.disabled = isBusy;
-    translateButton.textContent = isBusy
-      ? 'Translating...'
-      : 'Translate & Download';
-  }
-
-  if (cancelButton) {
-    cancelButton.style.display = isBusy ? 'inline-block' : 'none';
-  }
-}
-
-async function translateSrt() {
-  const fileInput = document.getElementById('srtFile');
-  const languageSelect = document.getElementById('targetLang');
-  const msg = 'srtMsg';
-
-  const file = fileInput.files[0];
-  const targetLanguage = languageSelect.value;
-
-  if (!file) {
-    showMsg(msg, 'Select an SRT file first.', true);
-    return;
-  }
-
-  if (!file.name.toLowerCase().endsWith('.srt')) {
-    showMsg(msg, 'Please select a valid .srt file.', true);
-    return;
-  }
-
-  if (file.size > 5242880) {
-    showMsg(
-      msg,
-      'File is ' + bytesToMB(file.size) + ' MB. Maximum allowed size is 5 MB.',
-      true
-    );
-    return;
-  }
-
-  srtTranslationCancelled = false;
-  setSrtTranslationBusy(true);
-  showMsg(msg, 'Reading subtitle file...', false);
-
-  try {
-    const content = await file.text();
-    const subtitles = parseSrt(content);
-
-    if (subtitles.length === 0) {
-      throw new Error(
-        'No valid subtitles were found. Make sure the file is in SRT format.'
-      );
-    }
-
-    let totalCharacters = 0;
-
-    subtitles.forEach(function(subtitle) {
-      totalCharacters += subtitle.text.length;
-    });
-
-    if (totalCharacters > 50000) {
-      throw new Error(
-        'This file contains too much text for the free translation service. ' +
-        'Please use a smaller file or split it into multiple files.'
-      );
-    }
-
-    for (let i = 0; i < subtitles.length; i++) {
-      if (srtTranslationCancelled) {
-        showMsg(msg, 'Translation cancelled.', true);
-        return;
-      }
-
-      const subtitle = subtitles[i];
-
-      showMsg(
-        msg,
-        'Translating subtitle ' +
-          (i + 1) +
-          ' of ' +
-          subtitles.length +
-          '...',
-        false
-      );
-
-      subtitle.text = await translateSubtitleText(
-        subtitle.text,
-        targetLanguage
-      );
-
-      // Small delay to avoid sending requests too quickly.
-      await sleep(250);
-    }
-
-    if (srtTranslationCancelled) {
-      showMsg(msg, 'Translation cancelled.', true);
-      return;
-    }
-
-    const translatedSrt = buildSrt(subtitles);
-    const outputName =
-      file.name.replace(/\.srt$/i, '') +
-      '_' +
-      targetLanguage +
-      '.srt';
-
-    downloadFile(
-      new Blob([translatedSrt], {
-        type: 'application/x-subrip;charset=utf-8'
-      }),
-      outputName
-    );
-
-    showMsg(
-      msg,
-      'Translation complete. Downloaded ' + outputName,
-      false
-    );
-  } catch (error) {
-    console.error('SRT translation error:', error);
-
-    let errorMessage = error.message || 'Unknown translation error';
-
-    if (
-      errorMessage.toLowerCase().includes('failed to fetch')
-    ) {
-      errorMessage =
-        'The translation service could not be reached. ' +
-        'Check your internet connection, disable blocking extensions, ' +
-        'or try again later.';
-    }
-
-    showMsg(msg, 'Translation error: ' + errorMessage, true);
-  } finally {
-    setSrtTranslationBusy(false);
-  }
-}
-
-function cancelSrtTranslation() {
-  srtTranslationCancelled = true;
-  showMsg('srtMsg', 'Cancelling translation...', true);
-}
+    <div id="srtMsg" class="msg"></div>
+  </div>
+</div>
   <!-- Tool 5: YouTube Subtitle Downloader -->
   <div class="card">
     <div class="card-header">🎥 Download YouTube Subtitles (All Languages)</div>
@@ -923,93 +685,367 @@ function cancelSrtTranslation() {
       showMsg('ttsMsg', '❌ Error: ' + err.message, true);
     }
   }
+// ===== TOOL 4: SRT Subtitle Translator =====
 
-  // ===== TOOL 4: Translate SRT =====
-  function translateSrt() {
-    const file = document.getElementById('srtFile').files[0];
-    const msg = 'srtMsg';
+let srtTranslationCancelled = false;
 
-    if (!file) {
-      showMsg(msg, 'Select a SRT file', true);
+function sleep(milliseconds) {
+  return new Promise(function(resolve) {
+    setTimeout(resolve, milliseconds);
+  });
+}
+
+function decodeHtmlEntities(text) {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+}
+
+function parseSrt(content) {
+  const normalizedContent = content
+    .replace(/^\uFEFF/, '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .trim();
+
+  if (!normalizedContent) {
+    return [];
+  }
+
+  const blocks = normalizedContent.split(/\n{2,}/);
+  const subtitles = [];
+
+  blocks.forEach(function(block) {
+    const lines = block.split('\n');
+
+    if (lines.length < 3) {
       return;
     }
 
-    if (file.size > 5242880) {
-      showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true);
+    let indexLine = 0;
+
+    // Ignore accidental blank lines at the beginning of a block.
+    while (indexLine < lines.length && !lines[indexLine].trim()) {
+      indexLine++;
+    }
+
+    const number = lines[indexLine]
+      ? lines[indexLine].trim()
+      : '';
+
+    const timing = lines[indexLine + 1]
+      ? lines[indexLine + 1].trim()
+      : '';
+
+    const textLines = lines.slice(indexLine + 2);
+
+    if (!/^\d+$/.test(number)) {
       return;
     }
 
-    const targetLang = document.getElementById('targetLang').value;
-    showMsg(msg, 'Translating... please wait', false);
+    if (!timing.includes('-->')) {
+      return;
+    }
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const content = e.target.result;
-      const lines = content.split('\n');
-      const subtitles = [];
-      let current = {};
+    const text = textLines.join('\n').trim();
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+    if (!text) {
+      return;
+    }
 
-        if (!line) continue;
+    subtitles.push({
+      number: number,
+      timing: timing,
+      text: text
+    });
+  });
 
-        if (/^\d+$/.test(line)) {
-          if (current.text) subtitles.push(current);
-          current = { index: line };
-        } else if (line.includes('-->')) {
-          current.timing = line;
-        } else {
-          current.text = (current.text ? current.text + ' ' : '') + line;
-        }
+  return subtitles;
+}
+
+function buildSrt(subtitles) {
+  return subtitles.map(function(subtitle, index) {
+    return (
+      String(index + 1) +
+      '\n' +
+      subtitle.timing +
+      '\n' +
+      subtitle.text
+    );
+  }).join('\n\n') + '\n\n';
+}
+
+async function fetchWithTimeout(url, options, timeout) {
+  const controller = new AbortController();
+
+  const timeoutId = setTimeout(function() {
+    controller.abort();
+  }, timeout);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function setTranslationButtonsBusy(isBusy) {
+  const translateButton = document.getElementById('translateSrtButton');
+  const cancelButton = document.getElementById('cancelSrtButton');
+
+  if (translateButton) {
+    translateButton.disabled = isBusy;
+    translateButton.textContent = isBusy
+      ? 'Translating...'
+      : 'Translate & Download';
+  }
+
+  if (cancelButton) {
+    cancelButton.style.display = isBusy
+      ? 'inline-block'
+      : 'none';
+  }
+}
+
+async function translateText(text, sourceLanguage, targetLanguage) {
+  // MyMemory expects a specific source language.
+  // Do not use "auto" for Arabic subtitles.
+  const languagePair =
+    sourceLanguage + '|' + targetLanguage;
+
+  const apiUrl =
+    'https://api.mymemory.translated.net/get' +
+    '?q=' + encodeURIComponent(text) +
+    '&langpair=' + encodeURIComponent(languagePair);
+
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetchWithTimeout(
+        apiUrl,
+        {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json'
+          }
+        },
+        30000
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          'Translation service returned HTTP ' +
+          response.status
+        );
       }
 
-      if (current.text) subtitles.push(current);
+      const data = await response.json();
 
-      if (subtitles.length === 0) {
-        showMsg(msg, 'No subtitles found in file', true);
+      if (
+        !data.responseData ||
+        typeof data.responseData.translatedText !== 'string'
+      ) {
+        throw new Error(
+          data.responseDetails ||
+          'Invalid response from translation service'
+        );
+      }
+
+      const translatedText = decodeHtmlEntities(
+        data.responseData.translatedText
+      ).trim();
+
+      if (!translatedText) {
+        throw new Error(
+          'The translation service returned empty text'
+        );
+      }
+
+      // If the service returned the exact original text,
+      // retry once before accepting it.
+      if (
+        translatedText === text.trim() &&
+        attempt < 3
+      ) {
+        await sleep(1500);
+        continue;
+      }
+
+      return translatedText;
+    } catch (error) {
+      lastError = error;
+
+      if (error.name === 'AbortError') {
+        lastError = new Error(
+          'Translation request timed out'
+        );
+      }
+
+      if (attempt < 3) {
+        await sleep(attempt * 1500);
+      }
+    }
+  }
+
+  throw lastError || new Error('Translation failed');
+}
+
+async function translateSrt() {
+  const fileInput = document.getElementById('srtFile');
+  const sourceSelect = document.getElementById('sourceLang');
+  const targetSelect = document.getElementById('targetLang');
+  const msg = 'srtMsg';
+
+  const file = fileInput.files[0];
+  const sourceLanguage = sourceSelect.value;
+  const targetLanguage = targetSelect.value;
+
+  if (!file) {
+    showMsg(msg, 'Select an SRT file first.', true);
+    return;
+  }
+
+  if (!file.name.toLowerCase().endsWith('.srt')) {
+    showMsg(msg, 'Please select a valid .srt file.', true);
+    return;
+  }
+
+  if (file.size > 5242880) {
+    showMsg(
+      msg,
+      'File is ' + bytesToMB(file.size) +
+      ' MB. Maximum allowed size is 5 MB.',
+      true
+    );
+    return;
+  }
+
+  if (sourceLanguage === targetLanguage) {
+    showMsg(
+      msg,
+      'Choose different source and target languages.',
+      true
+    );
+    return;
+  }
+
+  srtTranslationCancelled = false;
+  setTranslationButtonsBusy(true);
+  showMsg(msg, 'Reading subtitle file...', false);
+
+  try {
+    const fileContent = await file.text();
+    const subtitles = parseSrt(fileContent);
+
+    if (subtitles.length === 0) {
+      throw new Error(
+        'No valid subtitles were found in this file.'
+      );
+    }
+
+    let totalCharacters = 0;
+
+    subtitles.forEach(function(subtitle) {
+      totalCharacters += subtitle.text.length;
+    });
+
+    if (totalCharacters > 50000) {
+      throw new Error(
+        'This file contains too much text for the free ' +
+        'translation service. Split the SRT file into smaller files.'
+      );
+    }
+
+    for (let i = 0; i < subtitles.length; i++) {
+      if (srtTranslationCancelled) {
+        showMsg(msg, 'Translation cancelled.', true);
         return;
       }
 
-      let translated = 0;
+      const subtitle = subtitles[i];
 
-      subtitles.forEach(function (sub) {
-        fetch('https://libretranslate.com/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            q: sub.text,
-            source: 'auto',
-            target: targetLang
-          })
-        })
-          .then(r => r.json())
-          .then(d => {
-            sub.text = d.translatedText || sub.text;
-            translated++;
+      showMsg(
+        msg,
+        'Translating subtitle ' +
+        (i + 1) +
+        ' of ' +
+        subtitles.length +
+        '...',
+        false
+      );
 
-            if (translated === subtitles.length) {
-              let srtContent = '';
-              subtitles.forEach(function (subItem, idx) {
-                srtContent += (idx + 1) + '\n' + subItem.timing + '\n' + subItem.text + '\n\n';
-              });
+      subtitle.text = await translateText(
+        subtitle.text,
+        sourceLanguage,
+        targetLanguage
+      );
 
-              downloadFile(new Blob([srtContent], { type: 'text/plain' }), 'translated_' + file.name);
-              showMsg(msg, 'SRT downloaded!', false);
-            }
-          })
-          .catch(err => {
-            showMsg(msg, 'Translation error: ' + err.message, true);
-          });
-      });
-    };
+      // Prevent too many requests in a short period.
+      await sleep(400);
+    }
 
-    reader.onerror = function () {
-      showMsg(msg, 'Could not read the SRT file.', true);
-    };
+    if (srtTranslationCancelled) {
+      showMsg(msg, 'Translation cancelled.', true);
+      return;
+    }
 
-    reader.readAsText(file);
+    const translatedSrt = buildSrt(subtitles);
+
+    const outputFilename =
+      file.name.replace(/\.srt$/i, '') +
+      '_' +
+      targetLanguage +
+      '.srt';
+
+    downloadFile(
+      new Blob([translatedSrt], {
+        type: 'application/x-subrip;charset=utf-8'
+      }),
+      outputFilename
+    );
+
+    showMsg(
+      msg,
+      'Translation complete. Downloaded ' +
+      outputFilename,
+      false
+    );
+  } catch (error) {
+    console.error('SRT translation error:', error);
+
+    let errorMessage = error.message ||
+      'Unknown translation error';
+
+    if (
+      errorMessage.toLowerCase().includes('failed to fetch')
+    ) {
+      errorMessage =
+        'The translation service could not be reached. ' +
+        'Check your internet connection or try again later.';
+    }
+
+    showMsg(
+      msg,
+      'Translation error: ' + errorMessage,
+      true
+    );
+  } finally {
+    setTranslationButtonsBusy(false);
   }
+}
+
+function cancelSrtTranslation() {
+  srtTranslationCancelled = true;
+  showMsg(
+    'srtMsg',
+    'Cancelling translation...',
+    true
+  );
+}
 
   // ===== TOOL 5: YouTube Subtitles =====
   function downloadYtSubs() {
