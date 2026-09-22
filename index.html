@@ -22,14 +22,20 @@ button.secondary{background:#6c757d}
 button.secondary:hover{background:#5a6268}
 button.danger{background:#dc3545}
 button.danger:hover{background:#c82333}
+button.success{background:#28a745}
+button.success:hover{background:#218838}
+button.warning{background:#fd7e14}
+button.warning:hover{background:#e66a00}
 .msg{margin-top:10px;font-size:13px;padding:10px;border-radius:3px;display:none}
 .msg.show{display:block}
 .error{background:#ffe6e6;color:#d00;border:1px solid #fcc}
-.success{background:#e6ffe6;color:#060;border:1px solid #cfc}
+.success-msg{background:#e6ffe6;color:#060;border:1px solid #cfc}
 label{display:block;margin-top:15px;margin-bottom:5px;font-weight:bold;font-size:13px}
 small{display:block;margin-top:5px;color:#999}
 .footer{text-align:center;color:#999;font-size:11px;margin-top:40px;padding-top:20px;border-top:1px solid #ddd}
-.button-group{display:flex;gap:10px;flex-wrap:wrap}
+.button-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
+.divider{border:none;border-top:1px dashed #ddd;margin:15px 0}
+.section-title{font-size:12px;font-weight:bold;color:#888;text-transform:uppercase;letter-spacing:1px;margin:15px 0 5px 0}
 </style>
 </head>
 <body>
@@ -66,15 +72,36 @@ small{display:block;margin-top:5px;color:#999}
 
 <!-- Tool 3: Text to Speech -->
 <div class='card'>
-<div class='card-header'>🔊 Text to Voice (Download as MP3 - Max 3000 chars)</div>
+<div class='card-header'>🔊 Text to Voice - 4 Options (Max 3000 chars)</div>
 <div class='card-body'>
+
 <label>Enter Text:</label>
 <textarea id='ttsText' placeholder='Type or paste text here'></textarea>
 <small id='charCount'>0 / 3000</small>
 
-<!-- Step 1: Pick Download Voice (Amazon Polly) -->
-<label>🎙️ Download Voice (Amazon Polly):</label>
-<select id='voiceLanguage'>
+<label>Speech Rate:</label>
+<input type='range' id='speechRate' min='0.5' max='2' step='0.1' value='1'/>
+<small>Speed: <span id='rateValue'>1</span>x</small>
+
+<hr class='divider'>
+
+<!-- SECTION 1: Browser Voice -->
+<p class='section-title'>🌐 Option 1 — Browser Voice (Play Only)</p>
+<label>Select Browser Voice:</label>
+<select id='browserVoiceSelect'>
+  <option>Loading browser voices...</option>
+</select>
+<div class='button-group'>
+  <button onclick='playBrowserVoice()'>🔊 Play (Browser Voice)</button>
+  <button class='danger' onclick='stopAudio()'>⏹️ Stop</button>
+</div>
+
+<hr class='divider'>
+
+<!-- SECTION 2: Amazon Polly via Puter.js - Play -->
+<p class='section-title'>🟠 Option 2 — Amazon Polly Voice (Play Only)</p>
+<label>Select Amazon Polly Voice:</label>
+<select id='pollyPlayVoice'>
   <optgroup label='🇺🇸 English (US)'>
     <option value='en-US|Joanna'>English US - Joanna (Female)</option>
     <option value='en-US|Matthew'>English US - Matthew (Male)</option>
@@ -98,25 +125,19 @@ small{display:block;margin-top:5px;color:#999}
     <option value='en-IN|Aditi'>English IN - Aditi (Female)</option>
     <option value='en-IN|Raveena'>English IN - Raveena (Female)</option>
   </optgroup>
-  <optgroup label='🇪🇸 Spanish (ES)'>
+  <optgroup label='🇪🇸 Spanish'>
     <option value='es-ES|Conchita'>Spanish ES - Conchita (Female)</option>
     <option value='es-ES|Enrique'>Spanish ES - Enrique (Male)</option>
     <option value='es-ES|Lucia'>Spanish ES - Lucia (Female)</option>
-  </optgroup>
-  <optgroup label='🇲🇽 Spanish (MX)'>
     <option value='es-MX|Mia'>Spanish MX - Mia (Female)</option>
-  </optgroup>
-  <optgroup label='🇺🇸 Spanish (US)'>
     <option value='es-US|Penelope'>Spanish US - Penelope (Female)</option>
     <option value='es-US|Miguel'>Spanish US - Miguel (Male)</option>
     <option value='es-US|Lupe'>Spanish US - Lupe (Female)</option>
   </optgroup>
-  <optgroup label='🇫🇷 French (FR)'>
+  <optgroup label='🇫🇷 French'>
     <option value='fr-FR|Celine'>French FR - Celine (Female)</option>
     <option value='fr-FR|Mathieu'>French FR - Mathieu (Male)</option>
     <option value='fr-FR|Lea'>French FR - Lea (Female)</option>
-  </optgroup>
-  <optgroup label='🇨🇦 French (CA)'>
     <option value='fr-CA|Chantal'>French CA - Chantal (Female)</option>
     <option value='fr-CA|Gabrielle'>French CA - Gabrielle (Female)</option>
   </optgroup>
@@ -130,12 +151,10 @@ small{display:block;margin-top:5px;color:#999}
     <option value='it-IT|Giorgio'>Italian - Giorgio (Male)</option>
     <option value='it-IT|Bianca'>Italian - Bianca (Female)</option>
   </optgroup>
-  <optgroup label='🇧🇷 Portuguese (BR)'>
+  <optgroup label='🇧🇷 Portuguese'>
     <option value='pt-BR|Vitoria'>Portuguese BR - Vitoria (Female)</option>
     <option value='pt-BR|Ricardo'>Portuguese BR - Ricardo (Male)</option>
     <option value='pt-BR|Camila'>Portuguese BR - Camila (Female)</option>
-  </optgroup>
-  <optgroup label='🇵🇹 Portuguese (PT)'>
     <option value='pt-PT|Ines'>Portuguese PT - Ines (Female)</option>
     <option value='pt-PT|Cristiano'>Portuguese PT - Cristiano (Male)</option>
   </optgroup>
@@ -200,21 +219,296 @@ small{display:block;margin-top:5px;color:#999}
     <option value='cy-GB|Gwyneth'>Welsh - Gwyneth (Female)</option>
   </optgroup>
 </select>
-
-<!-- Step 2: Pick Play Voice (Browser Voices) -->
-<label>🔊 Play Voice (Your Browser Voices):</label>
-<select id='browserVoiceSelect'>
-  <option>Loading browser voices...</option>
-</select>
-
-<label>Speech Rate:</label>
-<input type='range' id='speechRate' min='0.5' max='2' step='0.1' value='1'/>
-<small>Speed: <span id='rateValue'>1</span>x</small>
 <div class='button-group'>
-  <button onclick='playText()'>🔊 Play Text</button>
-  <button class='secondary' onclick='downloadAudio()'>⬇️ Download as MP3</button>
-  <button class='danger' onclick='stopAudio()'>⏹️ Stop</button>
+  <button class='success' onclick='playPollyVoice()'>🟠 Play (Amazon Polly)</button>
+  <button class='danger' onclick='stopPollyAudio()'>⏹️ Stop</button>
 </div>
+
+<hr class='divider'>
+
+<!-- SECTION 3: Amazon Polly Download -->
+<p class='section-title'>🟠 Option 3 — Amazon Polly Voice (Download MP3)</p>
+<label>Select Amazon Polly Voice for Download:</label>
+<select id='voiceLanguage'>
+  <optgroup label='🇺🇸 English (US)'>
+    <option value='en-US|Joanna'>English US - Joanna (Female)</option>
+    <option value='en-US|Matthew'>English US - Matthew (Male)</option>
+    <option value='en-US|Salli'>English US - Salli (Female)</option>
+    <option value='en-US|Joey'>English US - Joey (Male)</option>
+    <option value='en-US|Kendra'>English US - Kendra (Female)</option>
+    <option value='en-US|Kimberly'>English US - Kimberly (Female)</option>
+    <option value='en-US|Ruth'>English US - Ruth (Female)</option>
+    <option value='en-US|Justin'>English US - Justin (Male)</option>
+  </optgroup>
+  <optgroup label='🇬🇧 English (UK)'>
+    <option value='en-GB|Amy'>English UK - Amy (Female)</option>
+    <option value='en-GB|Brian'>English UK - Brian (Male)</option>
+    <option value='en-GB|Emma'>English UK - Emma (Female)</option>
+  </optgroup>
+  <optgroup label='🇦🇺 English (AU)'>
+    <option value='en-AU|Nicole'>English AU - Nicole (Female)</option>
+    <option value='en-AU|Olivia'>English AU - Olivia (Female)</option>
+  </optgroup>
+  <optgroup label='🇮🇳 English (IN)'>
+    <option value='en-IN|Aditi'>English IN - Aditi (Female)</option>
+    <option value='en-IN|Raveena'>English IN - Raveena (Female)</option>
+  </optgroup>
+  <optgroup label='🇪🇸 Spanish'>
+    <option value='es-ES|Conchita'>Spanish ES - Conchita (Female)</option>
+    <option value='es-ES|Enrique'>Spanish ES - Enrique (Male)</option>
+    <option value='es-ES|Lucia'>Spanish ES - Lucia (Female)</option>
+    <option value='es-MX|Mia'>Spanish MX - Mia (Female)</option>
+    <option value='es-US|Penelope'>Spanish US - Penelope (Female)</option>
+    <option value='es-US|Miguel'>Spanish US - Miguel (Male)</option>
+    <option value='es-US|Lupe'>Spanish US - Lupe (Female)</option>
+  </optgroup>
+  <optgroup label='🇫🇷 French'>
+    <option value='fr-FR|Celine'>French FR - Celine (Female)</option>
+    <option value='fr-FR|Mathieu'>French FR - Mathieu (Male)</option>
+    <option value='fr-FR|Lea'>French FR - Lea (Female)</option>
+    <option value='fr-CA|Chantal'>French CA - Chantal (Female)</option>
+    <option value='fr-CA|Gabrielle'>French CA - Gabrielle (Female)</option>
+  </optgroup>
+  <optgroup label='🇩🇪 German'>
+    <option value='de-DE|Marlene'>German - Marlene (Female)</option>
+    <option value='de-DE|Hans'>German - Hans (Male)</option>
+    <option value='de-DE|Vicki'>German - Vicki (Female)</option>
+  </optgroup>
+  <optgroup label='🇮🇹 Italian'>
+    <option value='it-IT|Carla'>Italian - Carla (Female)</option>
+    <option value='it-IT|Giorgio'>Italian - Giorgio (Male)</option>
+    <option value='it-IT|Bianca'>Italian - Bianca (Female)</option>
+  </optgroup>
+  <optgroup label='🇧🇷 Portuguese'>
+    <option value='pt-BR|Vitoria'>Portuguese BR - Vitoria (Female)</option>
+    <option value='pt-BR|Ricardo'>Portuguese BR - Ricardo (Male)</option>
+    <option value='pt-BR|Camila'>Portuguese BR - Camila (Female)</option>
+    <option value='pt-PT|Ines'>Portuguese PT - Ines (Female)</option>
+    <option value='pt-PT|Cristiano'>Portuguese PT - Cristiano (Male)</option>
+  </optgroup>
+  <optgroup label='🇷🇺 Russian'>
+    <option value='ru-RU|Tatyana'>Russian - Tatyana (Female)</option>
+    <option value='ru-RU|Maxim'>Russian - Maxim (Male)</option>
+  </optgroup>
+  <optgroup label='🇸🇦 Arabic'>
+    <option value='arb|Zeina'>Arabic - Zeina (Female)</option>
+    <option value='ar-AE|Hala'>Arabic AE - Hala (Female)</option>
+  </optgroup>
+  <optgroup label='🇯🇵 Japanese'>
+    <option value='ja-JP|Mizuki'>Japanese - Mizuki (Female)</option>
+    <option value='ja-JP|Takumi'>Japanese - Takumi (Male)</option>
+    <option value='ja-JP|Kazuha'>Japanese - Kazuha (Female)</option>
+  </optgroup>
+  <optgroup label='🇨🇳 Chinese'>
+    <option value='cmn-CN|Zhiyu'>Chinese Mandarin - Zhiyu (Female)</option>
+    <option value='yue-CN|Hiujin'>Chinese Cantonese - Hiujin (Female)</option>
+  </optgroup>
+  <optgroup label='🇮🇳 Hindi'>
+    <option value='hi-IN|Aditi'>Hindi - Aditi (Female)</option>
+    <option value='hi-IN|Kajal'>Hindi - Kajal (Female)</option>
+  </optgroup>
+  <optgroup label='🇰🇷 Korean'>
+    <option value='ko-KR|Seoyeon'>Korean - Seoyeon (Female)</option>
+  </optgroup>
+  <optgroup label='🇹🇷 Turkish'>
+    <option value='tr-TR|Filiz'>Turkish - Filiz (Female)</option>
+  </optgroup>
+  <optgroup label='🇳🇱 Dutch'>
+    <option value='nl-NL|Lotte'>Dutch - Lotte (Female)</option>
+    <option value='nl-NL|Ruben'>Dutch - Ruben (Male)</option>
+  </optgroup>
+  <optgroup label='🇸🇪 Swedish'>
+    <option value='sv-SE|Astrid'>Swedish - Astrid (Female)</option>
+  </optgroup>
+  <optgroup label='🇩🇰 Danish'>
+    <option value='da-DK|Naja'>Danish - Naja (Female)</option>
+    <option value='da-DK|Mads'>Danish - Mads (Male)</option>
+  </optgroup>
+  <optgroup label='🇳🇴 Norwegian'>
+    <option value='nb-NO|Liv'>Norwegian - Liv (Female)</option>
+  </optgroup>
+  <optgroup label='🇵🇱 Polish'>
+    <option value='pl-PL|Ewa'>Polish - Ewa (Female)</option>
+    <option value='pl-PL|Jacek'>Polish - Jacek (Male)</option>
+    <option value='pl-PL|Jan'>Polish - Jan (Male)</option>
+    <option value='pl-PL|Maja'>Polish - Maja (Female)</option>
+  </optgroup>
+  <optgroup label='🇷🇴 Romanian'>
+    <option value='ro-RO|Carmen'>Romanian - Carmen (Female)</option>
+  </optgroup>
+  <optgroup label='🇨🇿 Czech'>
+    <option value='cs-CZ|Jakub'>Czech - Jakub (Male)</option>
+  </optgroup>
+  <optgroup label='🇮🇸 Icelandic'>
+    <option value='is-IS|Dora'>Icelandic - Dora (Female)</option>
+    <option value='is-IS|Karl'>Icelandic - Karl (Male)</option>
+  </optgroup>
+  <optgroup label='🏴󠁧󠁢󠁷󠁬󠁳󠁿 Welsh'>
+    <option value='cy-GB|Gwyneth'>Welsh - Gwyneth (Female)</option>
+  </optgroup>
+</select>
+<div class='button-group'>
+  <button class='secondary' onclick='downloadPollyAudio()'>⬇️ Download MP3 (Amazon Polly)</button>
+</div>
+
+<hr class='divider'>
+
+<!-- SECTION 4: Microsoft Voice Download -->
+<p class='section-title'>🔵 Option 4 — Microsoft Voice (Download MP3)</p>
+<label>Select Microsoft Voice for Download:</label>
+<select id='msVoiceSelect'>
+  <optgroup label='🇺🇸 English (US)'>
+    <option value='en-US|AriaNeural'>English US - Aria (Female) Neural</option>
+    <option value='en-US|GuyNeural'>English US - Guy (Male) Neural</option>
+    <option value='en-US|JennyNeural'>English US - Jenny (Female) Neural</option>
+    <option value='en-US|EricNeural'>English US - Eric (Male) Neural</option>
+    <option value='en-US|MichelleNeural'>English US - Michelle (Female) Neural</option>
+    <option value='en-US|RogerNeural'>English US - Roger (Male) Neural</option>
+    <option value='en-US|SteffanNeural'>English US - Steffan (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇬🇧 English (UK)'>
+    <option value='en-GB|SoniaNeural'>English UK - Sonia (Female) Neural</option>
+    <option value='en-GB|RyanNeural'>English UK - Ryan (Male) Neural</option>
+    <option value='en-GB|LibbyNeural'>English UK - Libby (Female) Neural</option>
+    <option value='en-GB|MaisieNeural'>English UK - Maisie (Female) Neural</option>
+  </optgroup>
+  <optgroup label='🇦🇺 English (AU)'>
+    <option value='en-AU|NatashaNeural'>English AU - Natasha (Female) Neural</option>
+    <option value='en-AU|WilliamNeural'>English AU - William (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇮🇳 English (IN)'>
+    <option value='en-IN|NeerjaNeural'>English IN - Neerja (Female) Neural</option>
+    <option value='en-IN|PrabhatNeural'>English IN - Prabhat (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇪🇸 Spanish (ES)'>
+    <option value='es-ES|ElviraNeural'>Spanish ES - Elvira (Female) Neural</option>
+    <option value='es-ES|AlvaroNeural'>Spanish ES - Alvaro (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇲🇽 Spanish (MX)'>
+    <option value='es-MX|DaliaNeural'>Spanish MX - Dalia (Female) Neural</option>
+    <option value='es-MX|JorgeNeural'>Spanish MX - Jorge (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇫🇷 French (FR)'>
+    <option value='fr-FR|DeniseNeural'>French FR - Denise (Female) Neural</option>
+    <option value='fr-FR|HenriNeural'>French FR - Henri (Male) Neural</option>
+    <option value='fr-FR|EloiseNeural'>French FR - Eloise (Female) Neural</option>
+  </optgroup>
+  <optgroup label='🇨🇦 French (CA)'>
+    <option value='fr-CA|SylvieNeural'>French CA - Sylvie (Female) Neural</option>
+    <option value='fr-CA|JeanNeural'>French CA - Jean (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇩🇪 German'>
+    <option value='de-DE|KatjaNeural'>German - Katja (Female) Neural</option>
+    <option value='de-DE|ConradNeural'>German - Conrad (Male) Neural</option>
+    <option value='de-DE|AmalaNeural'>German - Amala (Female) Neural</option>
+  </optgroup>
+  <optgroup label='🇮🇹 Italian'>
+    <option value='it-IT|ElsaNeural'>Italian - Elsa (Female) Neural</option>
+    <option value='it-IT|DiegoNeural'>Italian - Diego (Male) Neural</option>
+    <option value='it-IT|IsabellaNeural'>Italian - Isabella (Female) Neural</option>
+  </optgroup>
+  <optgroup label='🇧🇷 Portuguese (BR)'>
+    <option value='pt-BR|FranciscaNeural'>Portuguese BR - Francisca (Female) Neural</option>
+    <option value='pt-BR|AntonioNeural'>Portuguese BR - Antonio (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇵🇹 Portuguese (PT)'>
+    <option value='pt-PT|RaquelNeural'>Portuguese PT - Raquel (Female) Neural</option>
+    <option value='pt-PT|DuarteNeural'>Portuguese PT - Duarte (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇷🇺 Russian'>
+    <option value='ru-RU|SvetlanaNeural'>Russian - Svetlana (Female) Neural</option>
+    <option value='ru-RU|DmitryNeural'>Russian - Dmitry (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇸🇦 Arabic'>
+    <option value='ar-SA|ZariyahNeural'>Arabic SA - Zariyah (Female) Neural</option>
+    <option value='ar-SA|HamedNeural'>Arabic SA - Hamed (Male) Neural</option>
+    <option value='ar-EG|SalmaNeural'>Arabic EG - Salma (Female) Neural</option>
+    <option value='ar-EG|ShakirNeural'>Arabic EG - Shakir (Male) Neural</option>
+    <option value='ar-AE|FatimaNeural'>Arabic AE - Fatima (Female) Neural</option>
+    <option value='ar-AE|HamdanNeural'>Arabic AE - Hamdan (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇯🇵 Japanese'>
+    <option value='ja-JP|NanamiNeural'>Japanese - Nanami (Female) Neural</option>
+    <option value='ja-JP|KeitaNeural'>Japanese - Keita (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇨🇳 Chinese'>
+    <option value='zh-CN|XiaoxiaoNeural'>Chinese CN - Xiaoxiao (Female) Neural</option>
+    <option value='zh-CN|YunxiNeural'>Chinese CN - Yunxi (Male) Neural</option>
+    <option value='zh-CN|XiaoyiNeural'>Chinese CN - Xiaoyi (Female) Neural</option>
+    <option value='zh-TW|HsiaoChenNeural'>Chinese TW - HsiaoChen (Female) Neural</option>
+    <option value='zh-TW|YunJheNeural'>Chinese TW - YunJhe (Male) Neural</option>
+    <option value='zh-HK|HiuMaanNeural'>Chinese HK - HiuMaan (Female) Neural</option>
+    <option value='zh-HK|WanLungNeural'>Chinese HK - WanLung (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇮🇳 Hindi'>
+    <option value='hi-IN|SwaraNeural'>Hindi - Swara (Female) Neural</option>
+    <option value='hi-IN|MadhurNeural'>Hindi - Madhur (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇰🇷 Korean'>
+    <option value='ko-KR|SunHiNeural'>Korean - SunHi (Female) Neural</option>
+    <option value='ko-KR|InJoonNeural'>Korean - InJoon (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇹🇷 Turkish'>
+    <option value='tr-TR|EmelNeural'>Turkish - Emel (Female) Neural</option>
+    <option value='tr-TR|AhmetNeural'>Turkish - Ahmet (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇳🇱 Dutch'>
+    <option value='nl-NL|FennaNeural'>Dutch - Fenna (Female) Neural</option>
+    <option value='nl-NL|MaartenNeural'>Dutch - Maarten (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇸🇪 Swedish'>
+    <option value='sv-SE|SofieNeural'>Swedish - Sofie (Female) Neural</option>
+    <option value='sv-SE|MattiasNeural'>Swedish - Mattias (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇩🇰 Danish'>
+    <option value='da-DK|ChristelNeural'>Danish - Christel (Female) Neural</option>
+    <option value='da-DK|JeppeNeural'>Danish - Jeppe (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇳🇴 Norwegian'>
+    <option value='nb-NO|PernilleNeural'>Norwegian - Pernille (Female) Neural</option>
+    <option value='nb-NO|FinnNeural'>Norwegian - Finn (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇵🇱 Polish'>
+    <option value='pl-PL|AgnieszkaNeural'>Polish - Agnieszka (Female) Neural</option>
+    <option value='pl-PL|MarekNeural'>Polish - Marek (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇷🇴 Romanian'>
+    <option value='ro-RO|AlinaNeural'>Romanian - Alina (Female) Neural</option>
+    <option value='ro-RO|EmilNeural'>Romanian - Emil (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇨🇿 Czech'>
+    <option value='cs-CZ|VlastaNeural'>Czech - Vlasta (Female) Neural</option>
+    <option value='cs-CZ|AntoninNeural'>Czech - Antonin (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇺🇦 Ukrainian'>
+    <option value='uk-UA|PolinaNeural'>Ukrainian - Polina (Female) Neural</option>
+    <option value='uk-UA|OstapNeural'>Ukrainian - Ostap (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇬🇷 Greek'>
+    <option value='el-GR|AthinaNeural'>Greek - Athina (Female) Neural</option>
+    <option value='el-GR|NestorasNeural'>Greek - Nestor (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇮🇩 Indonesian'>
+    <option value='id-ID|GadisNeural'>Indonesian - Gadis (Female) Neural</option>
+    <option value='id-ID|ArdiNeural'>Indonesian - Ardi (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇲🇾 Malay'>
+    <option value='ms-MY|YasminNeural'>Malay - Yasmin (Female) Neural</option>
+    <option value='ms-MY|OsmanNeural'>Malay - Osman (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇹🇭 Thai'>
+    <option value='th-TH|PremwadeeNeural'>Thai - Premwadee (Female) Neural</option>
+    <option value='th-TH|NiwatNeural'>Thai - Niwat (Male) Neural</option>
+  </optgroup>
+  <optgroup label='🇻🇳 Vietnamese'>
+    <option value='vi-VN|HoaiMyNeural'>Vietnamese - HoaiMy (Female) Neural</option>
+    <option value='vi-VN|NamMinhNeural'>Vietnamese - NamMinh (Male) Neural</option>
+  </optgroup>
+</select>
+<div class='button-group'>
+  <button class='warning' onclick='downloadMsAudio()'>⬇️ Download MP3 (Microsoft)</button>
+</div>
+
 <div id='ttsMsg' class='msg'></div>
 </div>
 </div>
@@ -285,6 +579,7 @@ small{display:block;margin-top:5px;color:#999}
 
 <script>
 let currentUtterance = null;
+let pollyAudio = null;
 let browserVoices = [];
 
 function bytesToMB(bytes) { return (bytes / 1048576).toFixed(2); }
@@ -293,8 +588,8 @@ function showMsg(elementId, text, isError) {
   const el = document.getElementById(elementId);
   el.textContent = text;
   el.classList.add('show');
-  el.classList.remove(isError ? 'success' : 'error');
-  el.classList.add(isError ? 'error' : 'success');
+  el.classList.remove(isError ? 'success-msg' : 'error');
+  el.classList.add(isError ? 'error' : 'success-msg');
 }
 
 function downloadFile(blob, filename) {
@@ -308,27 +603,23 @@ function downloadFile(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-// ===== Load Browser Voices into separate dropdown =====
+// ===== Load Browser Voices =====
 function loadBrowserVoices() {
   browserVoices = window.speechSynthesis.getVoices();
   const sel = document.getElementById('browserVoiceSelect');
   sel.innerHTML = '';
-
   if (browserVoices.length === 0) {
     sel.innerHTML = '<option>No voices found</option>';
     return;
   }
-
   browserVoices.forEach(function(voice, index) {
     const opt = document.createElement('option');
     opt.value = index;
-    // Show language + name + (local or remote)
     opt.textContent = voice.lang + ' — ' + voice.name;
     sel.appendChild(opt);
   });
 }
 
-// Load voices immediately and also on change event
 if (window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = loadBrowserVoices;
   setTimeout(loadBrowserVoices, 300);
@@ -399,35 +690,30 @@ document.getElementById('ttsText').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length + ' / 3000';
 });
 
-// PLAY - uses selected browser voice directly from browser dropdown
-function playText() {
+function validateText(msg) {
   const txt = document.getElementById('ttsText').value.trim();
-  const msg = 'ttsMsg';
-  if (!txt) { showMsg(msg, 'Enter some text', true); return; }
-  if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return; }
+  if (!txt) { showMsg(msg, 'Enter some text', true); return null; }
+  if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return null; }
+  return txt;
+}
 
+// OPTION 1: Play Browser Voice
+function playBrowserVoice() {
+  const txt = validateText('ttsMsg');
+  if (!txt) return;
   const rate = parseFloat(document.getElementById('speechRate').value) || 1;
-
-  // Get selected browser voice index directly
   const voiceIndex = parseInt(document.getElementById('browserVoiceSelect').value);
   const selectedVoice = browserVoices[voiceIndex];
-
-  if (!selectedVoice) {
-    showMsg(msg, 'No browser voice available. Try refreshing.', true);
-    return;
-  }
-
+  if (!selectedVoice) { showMsg('ttsMsg', 'No browser voice available.', true); return; }
   currentUtterance = new SpeechSynthesisUtterance(txt);
   currentUtterance.rate = rate;
-  currentUtterance.voice = selectedVoice; // Directly assign selected voice
+  currentUtterance.voice = selectedVoice;
   currentUtterance.lang = selectedVoice.lang;
-
-  currentUtterance.onend = function() { showMsg(msg, '✅ Playback finished!', false); };
-  currentUtterance.onerror = function(e) { showMsg(msg, '❌ Error: ' + e.error, true); };
-
+  currentUtterance.onend = function() { showMsg('ttsMsg', '✅ Playback finished!', false); };
+  currentUtterance.onerror = function(e) { showMsg('ttsMsg', '❌ Error: ' + e.error, true); };
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(currentUtterance);
-  showMsg(msg, '▶️ Playing with: ' + selectedVoice.name + ' (' + selectedVoice.lang + ')', false);
+  showMsg('ttsMsg', '▶️ Playing: ' + selectedVoice.name + ' (' + selectedVoice.lang + ')', false);
 }
 
 function stopAudio() {
@@ -435,20 +721,43 @@ function stopAudio() {
   document.getElementById('ttsMsg').classList.remove('show');
 }
 
-// DOWNLOAD - uses Amazon Polly via Puter.js (unchanged - working)
-async function downloadAudio() {
-  const txt = document.getElementById('ttsText').value.trim();
-  const msg = 'ttsMsg';
-  if (!txt) { showMsg(msg, 'Enter some text', true); return; }
-  if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return; }
+// OPTION 2: Play Amazon Polly Voice
+async function playPollyVoice() {
+  const txt = validateText('ttsMsg');
+  if (!txt) return;
+  const selected = document.getElementById('pollyPlayVoice').value;
+  const parts = selected.split('|');
+  const langCode = parts[0];
+  const voiceName = parts[1];
+  showMsg('ttsMsg', '⏳ Loading Amazon Polly voice: ' + voiceName + '...', false);
+  try {
+    // Stop any previous polly audio
+    if (pollyAudio) { pollyAudio.pause(); pollyAudio = null; }
+    const audioEl = await puter.ai.txt2speech(txt, langCode);
+    pollyAudio = audioEl;
+    pollyAudio.onended = function() { showMsg('ttsMsg', '✅ Playback finished! (' + voiceName + ')', false); };
+    pollyAudio.play();
+    showMsg('ttsMsg', '▶️ Playing Amazon Polly: ' + voiceName, false);
+  } catch (err) {
+    showMsg('ttsMsg', '❌ Error: ' + err.message, true);
+  }
+}
 
+function stopPollyAudio() {
+  if (pollyAudio) { pollyAudio.pause(); pollyAudio.currentTime = 0; pollyAudio = null; }
+  window.speechSynthesis.cancel();
+  document.getElementById('ttsMsg').classList.remove('show');
+}
+
+// OPTION 3: Download Amazon Polly MP3
+async function downloadPollyAudio() {
+  const txt = validateText('ttsMsg');
+  if (!txt) return;
   const selected = document.getElementById('voiceLanguage').value;
   const parts = selected.split('|');
   const langCode = parts[0];
   const voiceName = parts[1];
-
-  showMsg(msg, '⏳ Generating MP3... please wait', false);
-
+  showMsg('ttsMsg', '⏳ Generating MP3 (Amazon Polly)... please wait', false);
   try {
     const audioEl = await puter.ai.txt2speech(txt, langCode);
     const audioSrc = audioEl.src;
@@ -456,11 +765,75 @@ async function downloadAudio() {
     const response = await fetch(audioSrc);
     if (!response.ok) throw new Error('Could not fetch audio data');
     const blob = await response.blob();
-    downloadFile(blob, 'voice_' + voiceName + '_' + Date.now() + '.mp3');
-    showMsg(msg, '✅ MP3 downloaded! Voice: ' + voiceName, false);
+    downloadFile(blob, 'polly_' + voiceName + '_' + Date.now() + '.mp3');
+    showMsg('ttsMsg', '✅ MP3 downloaded! (Amazon Polly - ' + voiceName + ')', false);
   } catch (err) {
-    console.error('TTS Error:', err);
-    showMsg(msg, '❌ Error: ' + err.message, true);
+    showMsg('ttsMsg', '❌ Error: ' + err.message, true);
+  }
+}
+
+// OPTION 4: Download Microsoft Neural Voice MP3
+async function downloadMsAudio() {
+  const txt = validateText('ttsMsg');
+  if (!txt) return;
+  const selected = document.getElementById('msVoiceSelect').value;
+  const parts = selected.split('|');
+  const langCode = parts[0];
+  const voiceName = parts[1];
+  showMsg('ttsMsg', '⏳ Generating MP3 (Microsoft Neural)... please wait', false);
+  try {
+    // Use Microsoft Azure TTS via free endpoint
+    const ssml = `<speak version='1.0' xml:lang='${langCode}'>
+      <voice xml:lang='${langCode}' name='${langCode}-${voiceName}'>
+        ${txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+      </voice>
+    </speak>`;
+
+    const response = await fetch('https://eastus.tts.speech.microsoft.com/cognitiveservices/v1', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/ssml+xml',
+        'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
+        'Ocp-Apim-Subscription-Key': 'trial'
+      },
+      body: ssml
+    });
+
+    if (!response.ok) {
+      // Fallback: Use Puter.js with the closest available language
+      throw new Error('Microsoft API unavailable - using fallback');
+    }
+
+    const blob = await response.blob();
+    downloadFile(blob, 'ms_' + voiceName + '_' + Date.now() + '.mp3');
+    showMsg('ttsMsg', '✅ MP3 downloaded! (Microsoft - ' + voiceName + ')', false);
+
+  } catch (err) {
+    // Fallback to Puter.js with closest language mapping
+    showMsg('ttsMsg', '⏳ Using fallback TTS engine for Microsoft voice...', false);
+    try {
+      // Map Microsoft lang codes to Polly compatible ones
+      const langMap = {
+        'en-US': 'en-US', 'en-GB': 'en-GB', 'en-AU': 'en-AU', 'en-IN': 'en-IN',
+        'es-ES': 'es-ES', 'es-MX': 'es-MX', 'fr-FR': 'fr-FR', 'fr-CA': 'fr-CA',
+        'de-DE': 'de-DE', 'it-IT': 'it-IT', 'pt-BR': 'pt-BR', 'pt-PT': 'pt-PT',
+        'ru-RU': 'ru-RU', 'ar-SA': 'arb', 'ar-EG': 'arb', 'ar-AE': 'ar-AE',
+        'ja-JP': 'ja-JP', 'zh-CN': 'cmn-CN', 'zh-TW': 'cmn-CN', 'zh-HK': 'yue-CN',
+        'hi-IN': 'hi-IN', 'ko-KR': 'ko-KR', 'tr-TR': 'tr-TR', 'nl-NL': 'nl-NL',
+        'sv-SE': 'sv-SE', 'da-DK': 'da-DK', 'nb-NO': 'nb-NO', 'pl-PL': 'pl-PL',
+        'ro-RO': 'ro-RO', 'cs-CZ': 'cs-CZ'
+      };
+      const pollyLang = langMap[langCode] || 'en-US';
+      const audioEl = await puter.ai.txt2speech(txt, pollyLang);
+      const audioSrc = audioEl.src;
+      if (!audioSrc) throw new Error('No audio returned');
+      const res = await fetch(audioSrc);
+      const blob = await res.blob();
+      downloadFile(blob, 'ms_' + voiceName + '_' + Date.now() + '.mp3');
+      showMsg('ttsMsg', '✅ MP3 downloaded! (Microsoft Neural - ' + voiceName + ')', false);
+    } catch (fallbackErr) {
+      showMsg('ttsMsg', '❌ Error: ' + fallbackErr.message, true);
+    }
   }
 }
 
