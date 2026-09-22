@@ -71,7 +71,9 @@ small{display:block;margin-top:5px;color:#999}
 <label>Enter Text:</label>
 <textarea id='ttsText' placeholder='Type or paste text here'></textarea>
 <small id='charCount'>0 / 3000</small>
-<label>Language / Voice:</label>
+
+<!-- Step 1: Pick Download Voice (Amazon Polly) -->
+<label>🎙️ Download Voice (Amazon Polly):</label>
 <select id='voiceLanguage'>
   <optgroup label='🇺🇸 English (US)'>
     <option value='en-US|Joanna'>English US - Joanna (Female)</option>
@@ -198,7 +200,14 @@ small{display:block;margin-top:5px;color:#999}
     <option value='cy-GB|Gwyneth'>Welsh - Gwyneth (Female)</option>
   </optgroup>
 </select>
-<label>Speech Rate (Play only):</label>
+
+<!-- Step 2: Pick Play Voice (Browser Voices) -->
+<label>🔊 Play Voice (Your Browser Voices):</label>
+<select id='browserVoiceSelect'>
+  <option>Loading browser voices...</option>
+</select>
+
+<label>Speech Rate:</label>
 <input type='range' id='speechRate' min='0.5' max='2' step='0.1' value='1'/>
 <small>Speed: <span id='rateValue'>1</span>x</small>
 <div class='button-group'>
@@ -276,6 +285,7 @@ small{display:block;margin-top:5px;color:#999}
 
 <script>
 let currentUtterance = null;
+let browserVoices = [];
 
 function bytesToMB(bytes) { return (bytes / 1048576).toFixed(2); }
 
@@ -296,6 +306,32 @@ function downloadFile(blob, filename) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ===== Load Browser Voices into separate dropdown =====
+function loadBrowserVoices() {
+  browserVoices = window.speechSynthesis.getVoices();
+  const sel = document.getElementById('browserVoiceSelect');
+  sel.innerHTML = '';
+
+  if (browserVoices.length === 0) {
+    sel.innerHTML = '<option>No voices found</option>';
+    return;
+  }
+
+  browserVoices.forEach(function(voice, index) {
+    const opt = document.createElement('option');
+    opt.value = index;
+    // Show language + name + (local or remote)
+    opt.textContent = voice.lang + ' — ' + voice.name;
+    sel.appendChild(opt);
+  });
+}
+
+// Load voices immediately and also on change event
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = loadBrowserVoices;
+  setTimeout(loadBrowserVoices, 300);
 }
 
 // ===== TOOL 1: Word to PDF =====
@@ -363,11 +399,7 @@ document.getElementById('ttsText').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length + ' / 3000';
 });
 
-// Preload voices on page ready
-window.speechSynthesis.onvoiceschanged = function() {
-  window.speechSynthesis.getVoices();
-};
-
+// PLAY - uses selected browser voice directly from browser dropdown
 function playText() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
@@ -376,45 +408,26 @@ function playText() {
 
   const rate = parseFloat(document.getElementById('speechRate').value) || 1;
 
-  // Get selected language code e.g. "en-US" from "en-US|Joanna"
-  const selected = document.getElementById('voiceLanguage').value;
-  const langCode = selected.split('|')[0]; // e.g. "en-US"
-  const voiceName = selected.split('|')[1]; // e.g. "Joanna"
+  // Get selected browser voice index directly
+  const voiceIndex = parseInt(document.getElementById('browserVoiceSelect').value);
+  const selectedVoice = browserVoices[voiceIndex];
 
-  // Get all available browser voices
-  const voices = window.speechSynthesis.getVoices();
-
-  // Special handling for Arabic/Chinese which use non-standard codes
-  let searchLang = langCode;
-  if (langCode === 'arb') searchLang = 'ar';
-  if (langCode === 'cmn-CN') searchLang = 'zh-CN';
-  if (langCode === 'yue-CN') searchLang = 'zh-HK';
-
-  // Try exact match first
-  let matchedVoice = voices.find(v => v.lang === searchLang);
-
-  // If no exact match, try partial match on language prefix
-  if (!matchedVoice) {
-    const langPrefix = searchLang.split('-')[0];
-    matchedVoice = voices.find(v => v.lang.startsWith(langPrefix));
+  if (!selectedVoice) {
+    showMsg(msg, 'No browser voice available. Try refreshing.', true);
+    return;
   }
 
   currentUtterance = new SpeechSynthesisUtterance(txt);
   currentUtterance.rate = rate;
-  currentUtterance.lang = searchLang;
-
-  if (matchedVoice) {
-    currentUtterance.voice = matchedVoice;
-  }
+  currentUtterance.voice = selectedVoice; // Directly assign selected voice
+  currentUtterance.lang = selectedVoice.lang;
 
   currentUtterance.onend = function() { showMsg(msg, '✅ Playback finished!', false); };
-  currentUtterance.onerror = function(e) { showMsg(msg, 'Error: ' + e.error, true); };
+  currentUtterance.onerror = function(e) { showMsg(msg, '❌ Error: ' + e.error, true); };
 
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(currentUtterance);
-
-  const displayVoice = matchedVoice ? matchedVoice.name : langCode;
-  showMsg(msg, '▶️ Playing in: ' + voiceName + ' (' + displayVoice + ')', false);
+  showMsg(msg, '▶️ Playing with: ' + selectedVoice.name + ' (' + selectedVoice.lang + ')', false);
 }
 
 function stopAudio() {
@@ -422,6 +435,7 @@ function stopAudio() {
   document.getElementById('ttsMsg').classList.remove('show');
 }
 
+// DOWNLOAD - uses Amazon Polly via Puter.js (unchanged - working)
 async function downloadAudio() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
