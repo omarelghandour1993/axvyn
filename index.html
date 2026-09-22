@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='UTF-8'/>
+<meta name='viewport' content='width=device-width, initial-scale=1'/>
+<title>Axvyn - Free Online Tools</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px}
+.container{max-width:900px;margin:0 auto;background:white;padding:30px;border-radius:5px;box-shadow:0 2px 5px rgba(0,0,0,0.1)}
+h1{color:#333;margin-bottom:10px;text-align:center;font-size:28px}
+.subtitle{text-align:center;color:#666;margin-bottom:30px;font-size:14px}
+p.info{text-align:center;color:#999;font-size:12px;margin-bottom:30px}
+.card{border:1px solid #ddd;border-radius:5px;margin-bottom:20px;overflow:hidden}
+.card-header{background:#f0f0f0;padding:15px;font-weight:bold;color:#333;border-bottom:1px solid #ddd}
+.card-body{padding:20px}
+input,textarea,select{width:100%;padding:10px;margin:5px 0 15px 0;border:1px solid #ddd;border-radius:3px;font-family:Arial,sans-serif;font-size:14px}
+textarea{resize:vertical;min-height:100px}
+button{background:#007bff;color:white;padding:10px 20px;border:none;border-radius:3px;cursor:pointer;font-size:14px;margin-right:5px;margin-top:10px}
+button:hover{background:#0056b3}
+button.secondary{background:#28a745}
+button.secondary:hover{background:#1e7e34}
+.msg{margin-top:10px;font-size:13px;padding:10px;border-radius:3px;display:none}
+.msg.show{display:block}
+.error{background:#ffe6e6;color:#d00;border:1px solid #fcc}
+.success{background:#e6ffe6;color:#060;border:1px solid #cfc}
+label{display:block;margin-top:15px;margin-bottom:5px;font-weight:bold;font-size:13px}
+small{display:block;margin-top:5px;color:#999}
+.footer{text-align:center;color:#999;font-size:11px;margin-top:40px;padding-top:20px;border-top:1px solid #ddd}
+</style>
+</head>
+<body>
+
+<div class='container'>
+<h1>⚙️ Axvyn</h1>
+<p class='subtitle'>Free Online Tools</p>
+<p class='info'>All tools work in your browser. Nothing is uploaded anywhere.</p>
+
+<!-- Image Compressor -->
+<div class='card'>
+<div class='card-header'>🖼️ Image Compressor (Max 5 MB)</div>
+<div class='card-body'>
+<label>Select Image:</label>
+<input type='file' id='imgFile' accept='image/*'/>
+<label>Quality:</label>
+<input type='range' id='imgQuality' min='0.1' max='1' step='0.1' value='0.7'/>
+<small>Quality: <span id='qualityValue'>0.7</span></small>
+<button onclick='compressImg()'>Compress & Download</button>
+<div id='imgMsg' class='msg'></div>
+</div>
+</div>
+
+<!-- Text to Speech -->
+<div class='card'>
+<div class='card-header'>🔊 Text to Speech (Max 3000 chars)</div>
+<div class='card-body'>
+<label>Enter Text:</label>
+<textarea id='ttsText' placeholder='Type or paste text here'></textarea>
+<small id='charCount'>0 / 3000</small>
+<label>Voice:</label>
+<select id='voiceSelect'><option>Loading...</option></select>
+<button onclick='speakText()'>🔊 Play Text</button>
+<div id='ttsMsg' class='msg'></div>
+</div>
+</div>
+
+<!-- Text Converter -->
+<div class='card'>
+<div class='card-header'>✏️ Text Converter</div>
+<div class='card-body'>
+<label>Enter Text:</label>
+<textarea id='convText' placeholder='Paste your text'></textarea>
+<label>Convert To:</label>
+<select id='convType'>
+<option value='upper'>UPPERCASE</option>
+<option value='lower'>lowercase</option>
+<option value='reverse'>Reverse Text</option>
+<option value='nospace'>Remove Spaces</option>
+</select>
+<button onclick='convertText()'>Convert</button>
+<button class='secondary' onclick='copyConverted()'>📋 Copy</button>
+<label>Result:</label>
+<textarea id='convResult' readonly></textarea>
+<div id='convMsg' class='msg'></div>
+</div>
+</div>
+
+<!-- File Info -->
+<div class='card'>
+<div class='card-header'>📁 File Info Checker</div>
+<div class='card-body'>
+<label>Select File:</label>
+<input type='file' id='infoFile'/>
+<button onclick='checkFileInfo()'>Get File Info</button>
+<div id='fileInfo' style='margin-top:15px;font-size:13px;line-height:1.6'></div>
+</div>
+</div>
+
+<!-- JSON Formatter -->
+<div class='card'>
+<div class='card-header'>{ } JSON Formatter</div>
+<div class='card-body'>
+<label>Paste JSON:</label>
+<textarea id='jsonInput' placeholder='Paste JSON code here'></textarea>
+<button onclick='formatJson()'>Format JSON</button>
+<button style='background:#ffc107;color:#000' onclick='validateJson()'>Validate</button>
+<label>Output:</label>
+<textarea id='jsonOutput' readonly></textarea>
+<div id='jsonMsg' class='msg'></div>
+</div>
+</div>
+
+<div class='footer'>
+<p>© 2024 Axvyn. All tools work entirely in your browser.</p>
+</div>
+</div>
+
+<script>
+// Image Compressor
+document.getElementById('imgQuality').addEventListener('input', function(){
+  document.getElementById('qualityValue').textContent = this.value;
+});
+
+function compressImg(){
+  const file = document.getElementById('imgFile').files[0];
+  const msg = document.getElementById('imgMsg');
+  msg.className = 'msg show';
+  
+  if(!file){
+    msg.textContent = 'Select an image.';
+    msg.classList.add('error');
+    return;
+  }
+  
+  if(file.size > 5242880){
+    msg.textContent = 'File too large. Max 5 MB.';
+    msg.classList.add('error');
+    return;
+  }
+  
+  const quality = parseFloat(document.getElementById('imgQuality').value);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  
+  img.onload = function(){
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    canvas.toBlob(function(blob){
+      downloadFile(blob, 'compressed_' + file.name);
+      msg.textContent = '✓ Downloaded!';
+      msg.classList.remove('error');
+      msg.classList.add('success');
+    }, 'image/jpeg', quality);
+  };
+  
+  img.src = URL.createObjectURL(file);
+}
+
+// Text to Speech
+function loadVoices(){
+  const sel = document.getElementById('voiceSelect');
+  sel.innerHTML = '';
+  const voices = window.speechSynthesis.getVoices();
+  if(voices.length === 0){
+    sel.innerHTML = '<option>No voices available</option>';
+    return;
+  }
+  voices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = (v.lang || 'Unknown') + ' - ' + (v.name || 'Voice');
+    sel.appendChild(opt);
+  });
+}
+
+if(window.speechSynthesis){
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+  setTimeout(loadVoices, 500);
+}
+
+document.getElementById('ttsText').addEventListener('input', function(){
+  document.getElementById('charCount').textContent = this.value.length + ' / 3000';
+});
+
+function speakText(){
+  const txt = document.getElementById('ttsText').value.trim();
+  const msg = document.getElementById('ttsMsg');
+  msg.className = 'msg show';
+  
+  if(!txt){
+    msg.textContent = 'Enter some text.';
+    msg.classList.add('error');
+    return;
+  }
+  
+  if(txt.length > 3000){
+    msg.textContent = 'Max 3000 characters.';
+    msg.classList.add('error');
+    return;
+  }
+  
+  const voices = window.speechSynthesis.getVoices();
+  const idx = parseInt(document.getElementById('voiceSelect').value) || 0;
+  const utter = new SpeechSynthesisUtterance(txt);
+  if(idx >= 0 && idx < voices.length) utter.voice = voices[idx];
+  
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utter);
+}
+
+// Text Converter
+function convertText(){
+  const txt = document.getElementById('convText').value;
+  const type = document.getElementById('convType').value;
+  let result = '';
+  
+  switch(type){
+    case 'upper': result = txt.toUpperCase(); break;
+    case 'lower': result = txt.toLowerCase(); break;
+    case 'reverse': result = txt.split('').reverse().join(''); break;
+    case 'nospace': result = txt.replace(/\s+/g, ''); break;
+  }
+  
+  document.getElementById('convResult').value = result;
+}
+
+function copyConverted(){
+  const result = document.getElementById('convResult').value;
+  const msg = document.getElementById('convMsg');
+  msg.className = 'msg show';
+  if(!result){
+    msg.textContent = 'Nothing to copy';
+    msg.classList.add('error');
+    return;
+  }
+  navigator.clipboard.writeText(result).then(() => {
+    msg.textContent = '✓ Copied to clipboard!';
+    msg.classList.add('success');
+    setTimeout(() => msg.classList.remove('show'), 2000);
+  });
+}
+
+// File Info
+function checkFileInfo(){
+  const file = document.getElementById('infoFile').files[0];
+  const info = document.getElementById('fileInfo');
+  if(!file){
+    info.innerHTML = 'Select a file first.';
+    return;
+  }
+  const sizeMB = (file.size / 1048576).toFixed(2);
+  const sizeKB = (file.size / 1024).toFixed(2);
+  info.innerHTML = '<b>Name:</b> ' + file.name + '<br/><b>Size:</b> ' + sizeMB + ' MB (' + sizeKB + ' KB)<br/><b>Type:</b> ' + file.type + '<br/><b>Last Modified:</b> ' + new Date(file.lastModified).toLocaleString();
+}
+
+// JSON Formatter
+function formatJson(){
+  const input = document.getElementById('jsonInput').value;
+  const msg = document.getElementById('jsonMsg');
+  msg.className = 'msg show';
+  
+  try{
+    const parsed = JSON.parse(input);
+    document.getElementById('jsonOutput').value = JSON.stringify(parsed, null, 2);
+    msg.textContent = '';
+  }catch(e){
+    msg.textContent = 'Invalid JSON: ' + e.message;
+    msg.classList.add('error');
+  }
+}
+
+function validateJson(){
+  const input = document.getElementById('jsonInput').value;
+  const msg = document.getElementById('jsonMsg');
+  msg.className = 'msg show';
+  
+  try{
+    JSON.parse(input);
+    msg.textContent = '✓ Valid JSON!';
+    msg.classList.remove('error');
+    msg.classList.add('success');
+  }catch(e){
+    msg.textContent = 'Invalid JSON: ' + e.message;
+    msg.classList.add('error');
+  }
+}
+
+// Download helper
+function downloadFile(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
