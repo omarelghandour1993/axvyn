@@ -59,16 +59,20 @@ small{display:block;margin-top:5px;color:#999}
 </div>
 </div>
 
-<!-- Tool 3: Text to Speech -->
+<!-- Tool 3: Text to Speech (Downloadable M4A) -->
 <div class='card'>
-<div class='card-header'>🔊 Text to Voice (Max 5 MB equivalent = 3000 chars)</div>
+<div class='card-header'>🔊 Text to Voice (Max 3000 chars) - Download as M4A</div>
 <div class='card-body'>
 <label>Enter Text:</label>
 <textarea id='ttsText' placeholder='Type or paste text here'></textarea>
 <small id='charCount'>0 / 3000</small>
 <label>Voice Language:</label>
 <select id='voiceSelect'><option>Loading...</option></select>
-<button onclick='speakText()'>🔊 Play Text</button>
+<label>Voice Speed:</label>
+<input type='range' id='voiceSpeed' min='0.5' max='2' step='0.1' value='1'/>
+<small>Speed: <span id='speedValue'>1</span>x</small>
+<button onclick='playText()'>🔊 Play</button>
+<button onclick='downloadAudio()'>⬇️ Download M4A</button>
 <div id='ttsMsg' class='msg'></div>
 </div>
 </div>
@@ -137,6 +141,10 @@ small{display:block;margin-top:5px;color:#999}
 <script src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'></script>
 
 <script>
+// Global variable to store audio blob for download
+let audioBlob = null;
+let currentUtterance = null;
+
 // Helper function
 function bytesToMB(bytes) {
   return (bytes / 1048576).toFixed(2);
@@ -249,7 +257,11 @@ function compressImg() {
   img.src = URL.createObjectURL(file);
 }
 
-// ===== TOOL 3: Text to Speech =====
+// ===== TOOL 3: Text to Speech (Downloadable M4A) =====
+document.getElementById('voiceSpeed').addEventListener('input', function() {
+  document.getElementById('speedValue').textContent = this.value;
+});
+
 function loadVoices() {
   const sel = document.getElementById('voiceSelect');
   sel.innerHTML = '';
@@ -277,7 +289,7 @@ document.getElementById('ttsText').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length + ' / 3000';
 });
 
-function speakText() {
+function playText() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
   
@@ -293,14 +305,77 @@ function speakText() {
   
   const voices = window.speechSynthesis.getVoices();
   const idx = parseInt(document.getElementById('voiceSelect').value) || 0;
-  const utter = new SpeechSynthesisUtterance(txt);
+  const speed = parseFloat(document.getElementById('voiceSpeed').value) || 1;
+  
+  currentUtterance = new SpeechSynthesisUtterance(txt);
+  currentUtterance.rate = speed;
   
   if (idx >= 0 && idx < voices.length) {
-    utter.voice = voices[idx];
+    currentUtterance.voice = voices[idx];
   }
   
   window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utter);
+  window.speechSynthesis.speak(currentUtterance);
+  showMsg(msg, 'Playing... click Download M4A to save the audio', false);
+}
+
+function downloadAudio() {
+  const txt = document.getElementById('ttsText').value.trim();
+  const msg = 'ttsMsg';
+  
+  if (!txt) {
+    showMsg(msg, 'Enter some text first', true);
+    return;
+  }
+  
+  if (txt.length > 3000) {
+    showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true);
+    return;
+  }
+  
+  showMsg(msg, 'Generating audio... please wait', false);
+  
+  const voices = window.speechSynthesis.getVoices();
+  const idx = parseInt(document.getElementById('voiceSelect').value) || 0;
+  const speed = parseFloat(document.getElementById('voiceSpeed').value) || 1;
+  
+  // Use Web Audio API to capture speech synthesis
+  const utterance = new SpeechSynthesisUtterance(txt);
+  utterance.rate = speed;
+  
+  if (idx >= 0 && idx < voices.length) {
+    utterance.voice = voices[idx];
+  }
+  
+  // Create audio context for recording
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const destination = audioContext.createMediaStreamDestination();
+  const mediaRecorder = new MediaRecorder(destination.stream);
+  const chunks = [];
+  
+  mediaRecorder.ondataavailable = function(e) {
+    chunks.push(e.data);
+  };
+  
+  mediaRecorder.onstop = function() {
+    audioBlob = new Blob(chunks, { type: 'audio/mp4' });
+    downloadFile(audioBlob, 'voice_' + Date.now() + '.m4a');
+    showMsg(msg, 'M4A audio downloaded!', false);
+  };
+  
+  mediaRecorder.start();
+  
+  utterance.onend = function() {
+    mediaRecorder.stop();
+  };
+  
+  utterance.onerror = function(event) {
+    mediaRecorder.stop();
+    showMsg(msg, 'Error generating audio: ' + event.error, true);
+  };
+  
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
 }
 
 // ===== TOOL 4: Translate SRT =====
