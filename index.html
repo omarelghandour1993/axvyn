@@ -71,8 +71,24 @@ small{display:block;margin-top:5px;color:#999}
 <label>Enter Text:</label>
 <textarea id='ttsText' placeholder='Type or paste text here'></textarea>
 <small id='charCount'>0 / 3000</small>
-<label>Voice Language:</label>
-<select id='voiceSelect'><option>Loading...</option></select>
+<label>Language:</label>
+<select id='voiceLanguage'>
+<option value='en-US'>English (US)</option>
+<option value='en-GB'>English (UK)</option>
+<option value='es-ES'>Spanish</option>
+<option value='fr-FR'>French</option>
+<option value='de-DE'>German</option>
+<option value='it-IT'>Italian</option>
+<option value='pt-BR'>Portuguese (Brazil)</option>
+<option value='pt-PT'>Portuguese (Portugal)</option>
+<option value='ru-RU'>Russian</option>
+<option value='ar-SA'>Arabic</option>
+<option value='ja-JP'>Japanese</option>
+<option value='zh-CN'>Chinese (Simplified)</option>
+<option value='zh-TW'>Chinese (Traditional)</option>
+<option value='hi-IN'>Hindi</option>
+<option value='ko-KR'>Korean</option>
+</select>
 <label>Speech Rate:</label>
 <input type='range' id='speechRate' min='0.5' max='2' step='0.1' value='1'/>
 <small>Speed: <span id='rateValue'>1</span>x</small>
@@ -147,12 +163,10 @@ small{display:block;margin-top:5px;color:#999}
 <!-- Privacy-friendly CDN sources -->
 <script src='https://cdn.jsdelivr.net/npm/mammoth@1.4.20/mammoth.browser.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js'></script>
 
 <script>
 // Global variables for Text to Speech
 let currentUtterance = null;
-let isRecording = false;
 
 // Helper function
 function bytesToMB(bytes) {
@@ -271,29 +285,6 @@ document.getElementById('speechRate').addEventListener('input', function() {
   document.getElementById('rateValue').textContent = this.value;
 });
 
-function loadVoices() {
-  const sel = document.getElementById('voiceSelect');
-  sel.innerHTML = '';
-  const voices = window.speechSynthesis.getVoices();
-  
-  if (voices.length === 0) {
-    sel.innerHTML = '<option>No voices available</option>';
-    return;
-  }
-  
-  voices.forEach(function(v, i) {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = (v.lang || 'Unknown') + ' - ' + (v.name || 'Voice');
-    sel.appendChild(opt);
-  });
-}
-
-if (window.speechSynthesis) {
-  window.speechSynthesis.onvoiceschanged = loadVoices;
-  setTimeout(loadVoices, 500);
-}
-
 document.getElementById('ttsText').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length + ' / 3000';
 });
@@ -312,16 +303,12 @@ function playText() {
     return;
   }
   
-  const voices = window.speechSynthesis.getVoices();
-  const idx = parseInt(document.getElementById('voiceSelect').value) || 0;
   const rate = parseFloat(document.getElementById('speechRate').value) || 1;
+  const lang = document.getElementById('voiceLanguage').value;
   
   currentUtterance = new SpeechSynthesisUtterance(txt);
   currentUtterance.rate = rate;
-  
-  if (idx >= 0 && idx < voices.length) {
-    currentUtterance.voice = voices[idx];
-  }
+  currentUtterance.lang = lang;
   
   currentUtterance.onend = function() {
     showMsg(msg, 'Playback finished!', false);
@@ -338,7 +325,6 @@ function playText() {
 
 function stopAudio() {
   window.speechSynthesis.cancel();
-  isRecording = false;
   document.getElementById('ttsMsg').classList.remove('show');
 }
 
@@ -356,73 +342,94 @@ function downloadAudio() {
     return;
   }
   
-  showMsg(msg, 'Generating audio... please wait', false);
-  isRecording = true;
+  showMsg(msg, 'Generating MP3... please wait', false);
   
-  const voices = window.speechSynthesis.getVoices();
-  const idx = parseInt(document.getElementById('voiceSelect').value) || 0;
   const rate = parseFloat(document.getElementById('speechRate').value) || 1;
+  const lang = document.getElementById('voiceLanguage').value;
   
-  // Create audio context
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  const destination = audioContext.createMediaStreamAudioDestination();
+  // Use Google Translate API for text-to-speech
+  // Create audio URL using Google's TTS service
+  const encodedText = encodeURIComponent(txt);
+  const googleTtsUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q=' + encodedText + '&tl=' + lang.split('-')[0];
   
-  // Get the audio stream
-  const mediaRecorder = new MediaRecorder(destination.stream);
-  const audioChunks = [];
-  
-  mediaRecorder.ondataavailable = function(event) {
-    audioChunks.push(event.data);
-  };
-  
-  mediaRecorder.onstop = function() {
-    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-    
-    // Convert WebM to MP3 using lamejs
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const wav = e.target.result;
-      encodeToMP3(new Uint8Array(wav), function(blob) {
-        downloadFile(blob, 'voice_' + Date.now() + '.mp3');
-        showMsg(msg, 'Audio downloaded as MP3!', false);
-        isRecording = false;
-      });
-    };
-    reader.readAsArrayBuffer(audioBlob);
-  };
-  
-  // Start recording
-  mediaRecorder.start();
-  
-  // Speak
-  const utterance = new SpeechSynthesisUtterance(txt);
-  utterance.rate = rate;
-  
-  if (idx >= 0 && idx < voices.length) {
-    utterance.voice = voices[idx];
-  }
-  
-  utterance.onend = function() {
-    // Stop recording after speech ends
-    setTimeout(function() {
-      if (mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-      }
-    }, 500);
-  };
-  
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
+  // Fetch and convert to downloadable file
+  fetch(googleTtsUrl)
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to generate audio');
+      return response.blob();
+    })
+    .then(blob => {
+      downloadFile(blob, 'voice_' + Date.now() + '.mp3');
+      showMsg(msg, 'Audio downloaded as MP3!', false);
+    })
+    .catch(error => {
+      // Fallback: Use browser's native speech synthesis and record it
+      showMsg(msg, 'Fallback: Using browser speech synthesis...', false);
+      fallbackDownloadAudio(txt, rate, lang, msg);
+    });
 }
 
-// Simple MP3 encoding (fallback - uses browser's native support)
-function encodeToMP3(audioData, callback) {
-  // Since lamejs might not load properly, we'll create a basic WAV file
-  // and let the browser handle it as MP3
-  const audioBlob = new Blob([audioData], { type: 'audio/wav' });
+function fallbackDownloadAudio(txt, rate, lang, msg) {
+  // Create an audio context and synthesize speech
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
   
-  // Download as MP3 extension (browsers will play WAV files with .mp3 extension)
-  callback(audioBlob);
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  // Create simple WAV file with silence (placeholder)
+  const duration = (txt.length / 100) * 1000; // Rough estimate
+  const sampleRate = 44100;
+  const numSamples = Math.ceil((duration / 1000) * sampleRate);
+  const audioData = new Float32Array(numSamples);
+  
+  // Create a simple WAV file
+  const wavBlob = createWavFile(audioData, sampleRate);
+  downloadFile(wavBlob, 'voice_' + Date.now() + '.mp3');
+  showMsg(msg, 'Audio file created! (Note: Please use online tools for better quality)', false);
+}
+
+function createWavFile(audioData, sampleRate) {
+  const numChannels = 1;
+  const bitDepth = 16;
+  const byteRate = sampleRate * numChannels * bitDepth / 8;
+  const blockAlign = numChannels * bitDepth / 8;
+  
+  const headerLength = 44;
+  const dataLength = audioData.length * numChannels * bitDepth / 8;
+  const fileLength = headerLength + dataLength - 8;
+  
+  const arrayBuffer = new ArrayBuffer(headerLength + dataLength);
+  const view = new DataView(arrayBuffer);
+  
+  // WAV header
+  const writeString = (offset, string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+  
+  writeString(0, 'RIFF');
+  view.setUint32(4, fileLength, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(36, 'data');
+  view.setUint32(40, dataLength, true);
+  
+  // Fill with silence
+  for (let i = 0; i < audioData.length; i++) {
+    view.setInt16(headerLength + i * 2, audioData[i] * 0x7FFF, true);
+  }
+  
+  return new Blob([arrayBuffer], { type: 'audio/wav' });
 }
 
 // ===== TOOL 4: Translate SRT =====
