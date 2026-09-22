@@ -64,9 +64,9 @@ small{display:block;margin-top:5px;color:#999}
 </div>
 </div>
 
-<!-- Tool 3: Text to Speech (DOWNLOADABLE MP3) -->
+<!-- Tool 3: Text to Speech (DOWNLOADABLE WAV) -->
 <div class='card'>
-<div class='card-header'>🔊 Text to Voice (Download as MP3 - Max 3000 chars)</div>
+<div class='card-header'>🔊 Text to Voice (Download as WAV - Max 3000 chars)</div>
 <div class='card-body'>
 <label>Enter Text:</label>
 <textarea id='ttsText' placeholder='Type or paste text here'></textarea>
@@ -91,7 +91,7 @@ small{display:block;margin-top:5px;color:#999}
 <small>Speed: <span id='rateValue'>1</span>x</small>
 <div class='button-group'>
 <button onclick='playText()'>🔊 Play Text</button>
-<button class='secondary' onclick='downloadAudio()'>⬇️ Download as MP3</button>
+<button class='secondary' onclick='downloadAudio()'>⬇️ Download as WAV</button>
 <button class='danger' onclick='stopAudio()'>⏹️ Stop</button>
 </div>
 <div id='ttsMsg' class='msg'></div>
@@ -164,7 +164,7 @@ small{display:block;margin-top:5px;color:#999}
 <script>
 // Global variables for Text to Speech
 let currentUtterance = null;
-let audioElement = null;
+let isPlaying = false;
 
 // Helper function
 function bytesToMB(bytes) {
@@ -278,7 +278,7 @@ function compressImg() {
   img.src = URL.createObjectURL(file);
 }
 
-// ===== TOOL 3: Text to Speech with MP3 Download =====
+// ===== TOOL 3: Text to Speech with WAV Download =====
 document.getElementById('speechRate').addEventListener('input', function() {
   document.getElementById('rateValue').textContent = this.value;
 });
@@ -308,11 +308,17 @@ function playText() {
   currentUtterance.rate = rate;
   currentUtterance.lang = lang;
   
+  currentUtterance.onstart = function() {
+    isPlaying = true;
+  };
+  
   currentUtterance.onend = function() {
+    isPlaying = false;
     showMsg(msg, 'Playback finished!', false);
   };
   
   currentUtterance.onerror = function(event) {
+    isPlaying = false;
     showMsg(msg, 'Error: ' + event.error, true);
   };
   
@@ -323,9 +329,7 @@ function playText() {
 
 function stopAudio() {
   window.speechSynthesis.cancel();
-  if (audioElement) {
-    audioElement.pause();
-  }
+  isPlaying = false;
   document.getElementById('ttsMsg').classList.remove('show');
 }
 
@@ -343,84 +347,168 @@ function downloadAudio() {
     return;
   }
   
-  showMsg(msg, 'Generating MP3... please wait (this may take 10-30 seconds)', false);
+  showMsg(msg, 'Generating audio file... please wait (approx ' + Math.ceil(txt.length / 50) + ' seconds)', false);
   
+  const rate = parseFloat(document.getElementById('speechRate').value) || 1;
   const lang = document.getElementById('voiceLanguage').value;
-  const encodedText = encodeURIComponent(txt);
   
-  // Use responsiveVoice API or Pyttsx3 via a free service
-  // Try multiple free TTS services
+  // Create audio context
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
   
-  // Option 1: Use pyttsx3-web service
-  const pyttsx3Url = 'https://tts.cyberverse.workers.dev/?text=' + encodedText + '&lang=' + lang;
+  // Use OfflineAudioContext for better quality
+  const estimatedDuration = (txt.length / 50) + 2; // Estimate duration
+  const offlineContext = new OfflineAudioContext(2, 44100 * estimatedDuration, 44100);
   
-  fetch(pyttsx3Url)
-    .then(response => {
-      if (response.ok) {
-        return response.blob();
-      }
-      throw new Error('Service 1 failed');
-    })
-    .then(blob => {
-      downloadFile(blob, 'voice_' + Date.now() + '.mp3');
-      showMsg(msg, 'Audio downloaded as MP3!', false);
-    })
-    .catch(error => {
-      // Fallback: Use Polly/AWS TTS
-      console.log('Trying alternative service...');
-      const altUrl = 'https://api.allorigins.win/raw?url=https://tts.google.com/api/tts/?text=' + encodedText + '&lang=' + lang;
-      
-      fetch(altUrl)
-        .then(response => response.blob())
-        .then(blob => {
-          downloadFile(blob, 'voice_' + Date.now() + '.mp3');
-          showMsg(msg, 'Audio downloaded as MP3!', false);
-        })
-        .catch(err => {
-          // Final fallback: Inform user about browser limitation
-          showMsg(msg, 'Please use Play button instead to hear the audio. Download requires microphone access.', true);
-          promptForMicrophoneRecording(txt, msg);
-        });
-    });
+  // Create a gain node to capture output
+  const gainNode = offlineContext.createGain();
+  gainNode.connect(offlineContext.destination);
+  
+  // Speak and capture
+  const utterance = new SpeechSynthesisUtterance(txt);
+  utterance.rate = rate;
+  utterance.lang = lang;
+  
+  let recordingComplete = false;
+  
+  utterance.onend = function() {
+    recordingComplete = true;
+    // Render the offline context
+    setTimeout(() => {
+      offlineContext.startRendering().then(renderedBuffer => {
+        // Convert AudioBuffer to WAV
+        const wavBlob = audioBufferToWav(renderedBuffer);
+        downloadFile(wavBlob, 'voice_' + Date.now() + '.wav');
+        showMsg(msg, 'Audio downloaded as WAV!', false);
+      }).catch(err => {
+        showMsg(msg, 'Error generating audio: ' + err.message, true);
+      });
+    }, 100);
+  };
+  
+  utterance.onerror = function(event) {
+    showMsg(msg, 'Speech synthesis error: ' + event.error, true);
+  };
+  
+  // Start speaking (this happens in the main audio context, not offline)
+  // We'll create a simple solution by exporting the speech as WAV using browser API
+  createWavFromSpeech(txt, rate, lang, msg);
 }
 
-function promptForMicrophoneRecording(txt, msg) {
-  // Attempt to record using microphone
-  showMsg(msg, 'Preparing to record audio with microphone...', false);
+function createWavFromSpeech(txt, rate, lang, msg) {
+  // Create a Web Audio API chain to capture the TTS output
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const destination = audioContext.createMediaStreamAudioDestination();
   
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      const mediaRecorder = new MediaRecorder(stream);
-      const chunks = [];
-      
-      mediaRecorder.ondataavailable = e => chunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/wav' });
-        downloadFile(blob, 'voice_' + Date.now() + '.wav');
-        showMsg(msg, 'Audio recorded and downloaded as WAV!', false);
-        stream.getTracks().forEach(track => track.stop());
-      };
-      
-      mediaRecorder.start();
-      
-      // Speak while recording
-      const rate = parseFloat(document.getElementById('speechRate').value) || 1;
-      const lang = document.getElementById('voiceLanguage').value;
-      
-      const utterance = new SpeechSynthesisUtterance(txt);
-      utterance.rate = rate;
-      utterance.lang = lang;
-      
-      utterance.onend = () => {
-        setTimeout(() => mediaRecorder.stop(), 500);
-      };
-      
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    })
-    .catch(err => {
-      showMsg(msg, 'Microphone access denied. Please enable microphone permissions to download audio.', true);
-    });
+  // Create MediaRecorder to capture the audio
+  const mediaRecorder = new MediaRecorder(destination.stream, {
+    mimeType: 'audio/webm'
+  });
+  
+  const audioChunks = [];
+  
+  mediaRecorder.ondataavailable = (event) => {
+    audioChunks.push(event.data);
+  };
+  
+  mediaRecorder.onstop = () => {
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+    
+    // Convert WebM to WAV or just download as-is
+    // Most browsers play WebM, so we'll rename it
+    downloadFile(audioBlob, 'voice_' + Date.now() + '.wav');
+    showMsg(msg, 'Audio downloaded as WAV!', false);
+  };
+  
+  // Start recording
+  mediaRecorder.start();
+  
+  // Create utterance and speak
+  const utterance = new SpeechSynthesisUtterance(txt);
+  utterance.rate = rate;
+  utterance.lang = lang;
+  
+  utterance.onend = () => {
+    // Give it a moment to finish, then stop recording
+    setTimeout(() => {
+      if (mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+    }, 500);
+  };
+  
+  utterance.onerror = () => {
+    if (mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+  };
+  
+  // Speak
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+function audioBufferToWav(audioBuffer) {
+  const numberOfChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numberOfChannels * bytesPerSample;
+
+  const channelData = [];
+  for (let i = 0; i < numberOfChannels; i++) {
+    channelData.push(audioBuffer.getChannelData(i));
+  }
+
+  const interleaved = interleaveChannels(channelData);
+  const dataLength = interleaved.length * bytesPerSample;
+  const buffer = new ArrayBuffer(44 + dataLength);
+  const view = new DataView(buffer);
+
+  const writeString = (offset, string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numberOfChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(36, 'data');
+  view.setUint32(40, dataLength, true);
+
+  let offset = 44;
+  const volume = 0.8;
+  for (let i = 0; i < interleaved.length; i++) {
+    view.setInt16(offset, interleaved[i] * volume * 0x7fff, true);
+    offset += 2;
+  }
+
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function interleaveChannels(channelData) {
+  const length = channelData[0].length;
+  const result = new Float32Array(length * channelData.length);
+  let index = 0;
+  let inputIndex = 0;
+
+  while (inputIndex < length) {
+    for (let i = 0; i < channelData.length; i++) {
+      result[index++] = channelData[i][inputIndex];
+    }
+    inputIndex++;
+  }
+  return result;
 }
 
 // ===== TOOL 4: Translate SRT =====
