@@ -132,9 +132,9 @@ small{display:block;margin-top:5px;color:#999}
 </div>
 </div>
 
-<!-- FIXED: Load libraries with async/defer and ensure they're available -->
-<script async src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.min.js'></script>
-<script async src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'></script>
+<!-- Load libraries SYNCHRONOUSLY (removed async) -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'></script>
 
 <script>
 // Helper function
@@ -175,12 +175,6 @@ function convertDocxToPdf() {
     showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true);
     return;
   }
-
-  // Check if mammoth is loaded
-  if (typeof mammoth === 'undefined') {
-    showMsg(msg, 'Mammoth library is loading... please wait a moment and try again', true);
-    return;
-  }
   
   showMsg(msg, 'Converting... please wait', false);
   
@@ -188,12 +182,6 @@ function convertDocxToPdf() {
   reader.onload = function(e) {
     try {
       mammoth.convertToHtml({ arrayBuffer: e.target.result }).then(function(result) {
-        // Check if html2pdf is loaded
-        if (typeof html2pdf === 'undefined') {
-          showMsg(msg, 'PDF library is loading... please wait a moment and try again', true);
-          return;
-        }
-
         const html = result.value;
         const element = document.createElement('div');
         element.innerHTML = html;
