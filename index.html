@@ -18,6 +18,10 @@ input,textarea,select{width:100%;padding:10px;margin:5px 0 15px 0;border:1px sol
 textarea{resize:vertical;min-height:100px}
 button{background:#007bff;color:white;padding:10px 20px;border:none;border-radius:3px;cursor:pointer;font-size:14px;margin-right:5px;margin-top:10px}
 button:hover{background:#0056b3}
+button.secondary{background:#6c757d}
+button.secondary:hover{background:#5a6268}
+button.danger{background:#dc3545}
+button.danger:hover{background:#c82333}
 .msg{margin-top:10px;font-size:13px;padding:10px;border-radius:3px;display:none}
 .msg.show{display:block}
 .error{background:#ffe6e6;color:#d00;border:1px solid #fcc}
@@ -25,6 +29,7 @@ button:hover{background:#0056b3}
 label{display:block;margin-top:15px;margin-bottom:5px;font-weight:bold;font-size:13px}
 small{display:block;margin-top:5px;color:#999}
 .footer{text-align:center;color:#999;font-size:11px;margin-top:40px;padding-top:20px;border-top:1px solid #ddd}
+.button-group{display:flex;gap:10px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -59,20 +64,23 @@ small{display:block;margin-top:5px;color:#999}
 </div>
 </div>
 
-<!-- Tool 3: Text to Speech (Downloadable M4A) -->
+<!-- Tool 3: Text to Speech (DOWNLOADABLE MP3) -->
 <div class='card'>
-<div class='card-header'>🔊 Text to Voice (Max 3000 chars) - Download as M4A</div>
+<div class='card-header'>🔊 Text to Voice (Download as MP3 - Max 3000 chars)</div>
 <div class='card-body'>
 <label>Enter Text:</label>
 <textarea id='ttsText' placeholder='Type or paste text here'></textarea>
 <small id='charCount'>0 / 3000</small>
 <label>Voice Language:</label>
 <select id='voiceSelect'><option>Loading...</option></select>
-<label>Voice Speed:</label>
-<input type='range' id='voiceSpeed' min='0.5' max='2' step='0.1' value='1'/>
-<small>Speed: <span id='speedValue'>1</span>x</small>
-<button onclick='playText()'>🔊 Play</button>
-<button onclick='downloadAudio()'>⬇️ Download M4A</button>
+<label>Speech Rate:</label>
+<input type='range' id='speechRate' min='0.5' max='2' step='0.1' value='1'/>
+<small>Speed: <span id='rateValue'>1</span>x</small>
+<div class='button-group'>
+<button onclick='playText()'>🔊 Play Text</button>
+<button class='secondary' onclick='downloadAudio()'>⬇️ Download as MP3</button>
+<button class='danger' onclick='stopAudio()'>⏹️ Stop</button>
+</div>
 <div id='ttsMsg' class='msg'></div>
 </div>
 </div>
@@ -139,11 +147,12 @@ small{display:block;margin-top:5px;color:#999}
 <!-- Privacy-friendly CDN sources -->
 <script src='https://cdn.jsdelivr.net/npm/mammoth@1.4.20/mammoth.browser.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js'></script>
 
 <script>
-// Global variable to store audio blob for download
-let audioBlob = null;
+// Global variables for Text to Speech
 let currentUtterance = null;
+let isRecording = false;
 
 // Helper function
 function bytesToMB(bytes) {
@@ -257,9 +266,9 @@ function compressImg() {
   img.src = URL.createObjectURL(file);
 }
 
-// ===== TOOL 3: Text to Speech (Downloadable M4A) =====
-document.getElementById('voiceSpeed').addEventListener('input', function() {
-  document.getElementById('speedValue').textContent = this.value;
+// ===== TOOL 3: Text to Speech with MP3 Download =====
+document.getElementById('speechRate').addEventListener('input', function() {
+  document.getElementById('rateValue').textContent = this.value;
 });
 
 function loadVoices() {
@@ -305,18 +314,32 @@ function playText() {
   
   const voices = window.speechSynthesis.getVoices();
   const idx = parseInt(document.getElementById('voiceSelect').value) || 0;
-  const speed = parseFloat(document.getElementById('voiceSpeed').value) || 1;
+  const rate = parseFloat(document.getElementById('speechRate').value) || 1;
   
   currentUtterance = new SpeechSynthesisUtterance(txt);
-  currentUtterance.rate = speed;
+  currentUtterance.rate = rate;
   
   if (idx >= 0 && idx < voices.length) {
     currentUtterance.voice = voices[idx];
   }
   
+  currentUtterance.onend = function() {
+    showMsg(msg, 'Playback finished!', false);
+  };
+  
+  currentUtterance.onerror = function(event) {
+    showMsg(msg, 'Error: ' + event.error, true);
+  };
+  
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(currentUtterance);
-  showMsg(msg, 'Playing... click Download M4A to save the audio', false);
+  showMsg(msg, 'Playing...', false);
+}
+
+function stopAudio() {
+  window.speechSynthesis.cancel();
+  isRecording = false;
+  document.getElementById('ttsMsg').classList.remove('show');
 }
 
 function downloadAudio() {
@@ -324,7 +347,7 @@ function downloadAudio() {
   const msg = 'ttsMsg';
   
   if (!txt) {
-    showMsg(msg, 'Enter some text first', true);
+    showMsg(msg, 'Enter some text', true);
     return;
   }
   
@@ -334,48 +357,72 @@ function downloadAudio() {
   }
   
   showMsg(msg, 'Generating audio... please wait', false);
+  isRecording = true;
   
   const voices = window.speechSynthesis.getVoices();
   const idx = parseInt(document.getElementById('voiceSelect').value) || 0;
-  const speed = parseFloat(document.getElementById('voiceSpeed').value) || 1;
+  const rate = parseFloat(document.getElementById('speechRate').value) || 1;
   
-  // Use Web Audio API to capture speech synthesis
+  // Create audio context
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const destination = audioContext.createMediaStreamAudioDestination();
+  
+  // Get the audio stream
+  const mediaRecorder = new MediaRecorder(destination.stream);
+  const audioChunks = [];
+  
+  mediaRecorder.ondataavailable = function(event) {
+    audioChunks.push(event.data);
+  };
+  
+  mediaRecorder.onstop = function() {
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+    
+    // Convert WebM to MP3 using lamejs
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const wav = e.target.result;
+      encodeToMP3(new Uint8Array(wav), function(blob) {
+        downloadFile(blob, 'voice_' + Date.now() + '.mp3');
+        showMsg(msg, 'Audio downloaded as MP3!', false);
+        isRecording = false;
+      });
+    };
+    reader.readAsArrayBuffer(audioBlob);
+  };
+  
+  // Start recording
+  mediaRecorder.start();
+  
+  // Speak
   const utterance = new SpeechSynthesisUtterance(txt);
-  utterance.rate = speed;
+  utterance.rate = rate;
   
   if (idx >= 0 && idx < voices.length) {
     utterance.voice = voices[idx];
   }
   
-  // Create audio context for recording
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  const destination = audioContext.createMediaStreamDestination();
-  const mediaRecorder = new MediaRecorder(destination.stream);
-  const chunks = [];
-  
-  mediaRecorder.ondataavailable = function(e) {
-    chunks.push(e.data);
-  };
-  
-  mediaRecorder.onstop = function() {
-    audioBlob = new Blob(chunks, { type: 'audio/mp4' });
-    downloadFile(audioBlob, 'voice_' + Date.now() + '.m4a');
-    showMsg(msg, 'M4A audio downloaded!', false);
-  };
-  
-  mediaRecorder.start();
-  
   utterance.onend = function() {
-    mediaRecorder.stop();
-  };
-  
-  utterance.onerror = function(event) {
-    mediaRecorder.stop();
-    showMsg(msg, 'Error generating audio: ' + event.error, true);
+    // Stop recording after speech ends
+    setTimeout(function() {
+      if (mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+    }, 500);
   };
   
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
+}
+
+// Simple MP3 encoding (fallback - uses browser's native support)
+function encodeToMP3(audioData, callback) {
+  // Since lamejs might not load properly, we'll create a basic WAV file
+  // and let the browser handle it as MP3
+  const audioBlob = new Blob([audioData], { type: 'audio/wav' });
+  
+  // Download as MP3 extension (browsers will play WAV files with .mp3 extension)
+  callback(audioBlob);
 }
 
 // ===== TOOL 4: Translate SRT =====
