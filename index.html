@@ -64,35 +64,83 @@ small{display:block;margin-top:5px;color:#999}
 </div>
 </div>
 
-<!-- Tool 3: Text to Speech (DOWNLOADABLE WAV) -->
+<!-- Tool 3: Text to Speech (DOWNLOADABLE MP3 via StreamElements) -->
 <div class='card'>
-<div class='card-header'>🔊 Text to Voice (Download as WAV - Max 3000 chars)</div>
+<div class='card-header'>🔊 Text to Voice (Download as MP3 - Max 3000 chars)</div>
 <div class='card-body'>
 <label>Enter Text:</label>
 <textarea id='ttsText' placeholder='Type or paste text here'></textarea>
 <small id='charCount'>0 / 3000</small>
-<label>Language:</label>
+<label>Voice:</label>
 <select id='voiceLanguage'>
-<option value='en'>English</option>
-<option value='es'>Spanish</option>
-<option value='fr'>French</option>
-<option value='de'>German</option>
-<option value='it'>Italian</option>
-<option value='pt'>Portuguese</option>
-<option value='ru'>Russian</option>
-<option value='ar'>Arabic</option>
-<option value='ja'>Japanese</option>
-<option value='zh'>Chinese</option>
-<option value='hi'>Hindi</option>
-<option value='ko'>Korean</option>
+  <optgroup label='🇺🇸 English (US)'>
+    <option value='en-US|Matthew'>English US - Matthew (Male)</option>
+    <option value='en-US|Joanna'>English US - Joanna (Female)</option>
+    <option value='en-US|Joey'>English US - Joey (Male)</option>
+    <option value='en-US|Salli'>English US - Salli (Female)</option>
+    <option value='en-US|Kendra'>English US - Kendra (Female)</option>
+    <option value='en-US|Justin'>English US - Justin (Male)</option>
+  </optgroup>
+  <optgroup label='🇬🇧 English (UK)'>
+    <option value='en-GB|Brian'>English UK - Brian (Male)</option>
+    <option value='en-GB|Amy'>English UK - Amy (Female)</option>
+    <option value='en-GB|Emma'>English UK - Emma (Female)</option>
+  </optgroup>
+  <optgroup label='🇪🇸 Spanish'>
+    <option value='es-ES|Enrique'>Spanish - Enrique (Male)</option>
+    <option value='es-ES|Conchita'>Spanish - Conchita (Female)</option>
+    <option value='es-US|Miguel'>Spanish US - Miguel (Male)</option>
+    <option value='es-US|Penelope'>Spanish US - Penelope (Female)</option>
+  </optgroup>
+  <optgroup label='🇫🇷 French'>
+    <option value='fr-FR|Mathieu'>French - Mathieu (Male)</option>
+    <option value='fr-FR|Celine'>French - Celine (Female)</option>
+    <option value='fr-CA|Chantal'>French CA - Chantal (Female)</option>
+  </optgroup>
+  <optgroup label='🇩🇪 German'>
+    <option value='de-DE|Hans'>German - Hans (Male)</option>
+    <option value='de-DE|Marlene'>German - Marlene (Female)</option>
+    <option value='de-DE|Vicki'>German - Vicki (Female)</option>
+  </optgroup>
+  <optgroup label='🇮🇹 Italian'>
+    <option value='it-IT|Giorgio'>Italian - Giorgio (Male)</option>
+    <option value='it-IT|Carla'>Italian - Carla (Female)</option>
+    <option value='it-IT|Bianca'>Italian - Bianca (Female)</option>
+  </optgroup>
+  <optgroup label='🇧🇷 Portuguese'>
+    <option value='pt-BR|Ricardo'>Portuguese BR - Ricardo (Male)</option>
+    <option value='pt-BR|Vitoria'>Portuguese BR - Vitoria (Female)</option>
+    <option value='pt-PT|Cristiano'>Portuguese PT - Cristiano (Male)</option>
+    <option value='pt-PT|Ines'>Portuguese PT - Ines (Female)</option>
+  </optgroup>
+  <optgroup label='🇷🇺 Russian'>
+    <option value='ru-RU|Maxim'>Russian - Maxim (Male)</option>
+    <option value='ru-RU|Tatyana'>Russian - Tatyana (Female)</option>
+  </optgroup>
+  <optgroup label='🇸🇦 Arabic'>
+    <option value='ar-SA|Zeina'>Arabic - Zeina (Female)</option>
+  </optgroup>
+  <optgroup label='🇯🇵 Japanese'>
+    <option value='ja-JP|Takumi'>Japanese - Takumi (Male)</option>
+    <option value='ja-JP|Mizuki'>Japanese - Mizuki (Female)</option>
+  </optgroup>
+  <optgroup label='🇨🇳 Chinese'>
+    <option value='zh-CN|Zhiyu'>Chinese - Zhiyu (Female)</option>
+  </optgroup>
+  <optgroup label='🇮🇳 Hindi'>
+    <option value='hi-IN|Aditi'>Hindi - Aditi (Female)</option>
+  </optgroup>
+  <optgroup label='🇰🇷 Korean'>
+    <option value='ko-KR|Seoyeon'>Korean - Seoyeon (Female)</option>
+  </optgroup>
 </select>
 <label>Speech Rate:</label>
 <input type='range' id='speechRate' min='0.5' max='2' step='0.1' value='1'/>
 <small>Speed: <span id='rateValue'>1</span>x</small>
 <div class='button-group'>
-<button onclick='playText()'>🔊 Play Text</button>
-<button class='secondary' onclick='downloadAudio()'>⬇️ Download as WAV</button>
-<button class='danger' onclick='stopAudio()'>⏹️ Stop</button>
+  <button onclick='playText()'>🔊 Play Text</button>
+  <button class='secondary' onclick='downloadAudio()'>⬇️ Download as MP3</button>
+  <button class='danger' onclick='stopAudio()'>⏹️ Stop</button>
 </div>
 <div id='ttsMsg' class='msg'></div>
 </div>
@@ -157,16 +205,14 @@ small{display:block;margin-top:5px;color:#999}
 </div>
 </div>
 
-<!-- Privacy-friendly CDN sources -->
+<!-- Libraries -->
 <script src='https://cdn.jsdelivr.net/npm/mammoth@1.4.20/mammoth.browser.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'></script>
 
 <script>
-// Global variables for Text to Speech
 let currentUtterance = null;
-let isPlaying = false;
 
-// Helper function
+// ===== HELPERS =====
 function bytesToMB(bytes) {
   return (bytes / 1048576).toFixed(2);
 }
@@ -190,31 +236,38 @@ function downloadFile(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
+// Split text into chunks at word boundaries
+function splitTextIntoChunks(text, maxChars) {
+  const words = text.split(' ');
+  const chunks = [];
+  let current = '';
+
+  words.forEach(word => {
+    if ((current + ' ' + word).trim().length <= maxChars) {
+      current = (current + ' ' + word).trim();
+    } else {
+      if (current) chunks.push(current);
+      current = word;
+    }
+  });
+
+  if (current) chunks.push(current);
+  return chunks;
+}
+
 // ===== TOOL 1: Word to PDF =====
 function convertDocxToPdf() {
   const file = document.getElementById('docxFile').files[0];
   const msg = 'docxMsg';
-  
-  if (!file) {
-    showMsg(msg, 'Select a Word file (.docx)', true);
-    return;
-  }
-  
-  if (file.size > 5242880) {
-    showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true);
-    return;
-  }
-  
+  if (!file) { showMsg(msg, 'Select a Word file (.docx)', true); return; }
+  if (file.size > 5242880) { showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true); return; }
   showMsg(msg, 'Converting... please wait', false);
-  
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
       mammoth.convertToHtml({ arrayBuffer: e.target.result }).then(function(result) {
-        const html = result.value;
         const element = document.createElement('div');
-        element.innerHTML = html;
-        
+        element.innerHTML = result.value;
         const opt = {
           margin: 10,
           filename: file.name.replace(/\.docx$/i, '') + '.pdf',
@@ -222,15 +275,10 @@ function convertDocxToPdf() {
           html2canvas: { scale: 2 },
           jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
         };
-        
         html2pdf().set(opt).from(element).save();
         showMsg(msg, 'PDF downloaded!', false);
-      }).catch(function(err) {
-        showMsg(msg, 'Error: ' + err.message, true);
-      });
-    } catch (err) {
-      showMsg(msg, 'Error: ' + err.message, true);
-    }
+      }).catch(function(err) { showMsg(msg, 'Error: ' + err.message, true); });
+    } catch (err) { showMsg(msg, 'Error: ' + err.message, true); }
   };
   reader.readAsArrayBuffer(file);
 }
@@ -243,24 +291,13 @@ document.getElementById('imgQuality').addEventListener('input', function() {
 function compressImg() {
   const file = document.getElementById('imgFile').files[0];
   const msg = 'imgMsg';
-  
-  if (!file) {
-    showMsg(msg, 'Select an image', true);
-    return;
-  }
-  
-  if (file.size > 5242880) {
-    showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true);
-    return;
-  }
-  
+  if (!file) { showMsg(msg, 'Select an image', true); return; }
+  if (file.size > 5242880) { showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true); return; }
   showMsg(msg, 'Compressing...', false);
-  
   const quality = parseFloat(document.getElementById('imgQuality').value);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   const img = new Image();
-  
   img.onload = function() {
     canvas.width = img.width;
     canvas.height = img.height;
@@ -270,15 +307,11 @@ function compressImg() {
       showMsg(msg, 'Image downloaded!', false);
     }, 'image/jpeg', quality);
   };
-  
-  img.onerror = function() {
-    showMsg(msg, 'Error loading image', true);
-  };
-  
+  img.onerror = function() { showMsg(msg, 'Error loading image', true); };
   img.src = URL.createObjectURL(file);
 }
 
-// ===== TOOL 3: Text to Speech with WAV Download =====
+// ===== TOOL 3: Text to Speech =====
 document.getElementById('speechRate').addEventListener('input', function() {
   document.getElementById('rateValue').textContent = this.value;
 });
@@ -287,255 +320,99 @@ document.getElementById('ttsText').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length + ' / 3000';
 });
 
+function getSelectedVoice() {
+  const val = document.getElementById('voiceLanguage').value; // e.g. "en-US|Matthew"
+  const parts = val.split('|');
+  return { lang: parts[0], voice: parts[1] };
+}
+
 function playText() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
-  
-  if (!txt) {
-    showMsg(msg, 'Enter some text', true);
-    return;
-  }
-  
-  if (txt.length > 3000) {
-    showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true);
-    return;
-  }
-  
+  if (!txt) { showMsg(msg, 'Enter some text', true); return; }
+  if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return; }
+
   const rate = parseFloat(document.getElementById('speechRate').value) || 1;
-  const lang = document.getElementById('voiceLanguage').value;
-  
+  const { lang } = getSelectedVoice();
+
   currentUtterance = new SpeechSynthesisUtterance(txt);
   currentUtterance.rate = rate;
   currentUtterance.lang = lang;
-  
-  currentUtterance.onstart = function() {
-    isPlaying = true;
-  };
-  
-  currentUtterance.onend = function() {
-    isPlaying = false;
-    showMsg(msg, 'Playback finished!', false);
-  };
-  
-  currentUtterance.onerror = function(event) {
-    isPlaying = false;
-    showMsg(msg, 'Error: ' + event.error, true);
-  };
-  
+
+  currentUtterance.onend = function() { showMsg(msg, 'Playback finished!', false); };
+  currentUtterance.onerror = function(e) { showMsg(msg, 'Error: ' + e.error, true); };
+
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(currentUtterance);
-  showMsg(msg, 'Playing...', false);
+  showMsg(msg, '▶️ Playing...', false);
 }
 
 function stopAudio() {
   window.speechSynthesis.cancel();
-  isPlaying = false;
   document.getElementById('ttsMsg').classList.remove('show');
 }
 
-function downloadAudio() {
+async function downloadAudio() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
-  
-  if (!txt) {
-    showMsg(msg, 'Enter some text', true);
-    return;
-  }
-  
-  if (txt.length > 3000) {
-    showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true);
-    return;
-  }
-  
-  showMsg(msg, 'Generating audio file... please wait (approx ' + Math.ceil(txt.length / 50) + ' seconds)', false);
-  
-  const rate = parseFloat(document.getElementById('speechRate').value) || 1;
-  const lang = document.getElementById('voiceLanguage').value;
-  
-  // Create audio context
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  
-  // Use OfflineAudioContext for better quality
-  const estimatedDuration = (txt.length / 50) + 2; // Estimate duration
-  const offlineContext = new OfflineAudioContext(2, 44100 * estimatedDuration, 44100);
-  
-  // Create a gain node to capture output
-  const gainNode = offlineContext.createGain();
-  gainNode.connect(offlineContext.destination);
-  
-  // Speak and capture
-  const utterance = new SpeechSynthesisUtterance(txt);
-  utterance.rate = rate;
-  utterance.lang = lang;
-  
-  let recordingComplete = false;
-  
-  utterance.onend = function() {
-    recordingComplete = true;
-    // Render the offline context
-    setTimeout(() => {
-      offlineContext.startRendering().then(renderedBuffer => {
-        // Convert AudioBuffer to WAV
-        const wavBlob = audioBufferToWav(renderedBuffer);
-        downloadFile(wavBlob, 'voice_' + Date.now() + '.wav');
-        showMsg(msg, 'Audio downloaded as WAV!', false);
-      }).catch(err => {
-        showMsg(msg, 'Error generating audio: ' + err.message, true);
-      });
-    }, 100);
-  };
-  
-  utterance.onerror = function(event) {
-    showMsg(msg, 'Speech synthesis error: ' + event.error, true);
-  };
-  
-  // Start speaking (this happens in the main audio context, not offline)
-  // We'll create a simple solution by exporting the speech as WAV using browser API
-  createWavFromSpeech(txt, rate, lang, msg);
-}
 
-function createWavFromSpeech(txt, rate, lang, msg) {
-  // Create a Web Audio API chain to capture the TTS output
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  const destination = audioContext.createMediaStreamAudioDestination();
-  
-  // Create MediaRecorder to capture the audio
-  const mediaRecorder = new MediaRecorder(destination.stream, {
-    mimeType: 'audio/webm'
-  });
-  
-  const audioChunks = [];
-  
-  mediaRecorder.ondataavailable = (event) => {
-    audioChunks.push(event.data);
-  };
-  
-  mediaRecorder.onstop = () => {
-    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-    
-    // Convert WebM to WAV or just download as-is
-    // Most browsers play WebM, so we'll rename it
-    downloadFile(audioBlob, 'voice_' + Date.now() + '.wav');
-    showMsg(msg, 'Audio downloaded as WAV!', false);
-  };
-  
-  // Start recording
-  mediaRecorder.start();
-  
-  // Create utterance and speak
-  const utterance = new SpeechSynthesisUtterance(txt);
-  utterance.rate = rate;
-  utterance.lang = lang;
-  
-  utterance.onend = () => {
-    // Give it a moment to finish, then stop recording
-    setTimeout(() => {
-      if (mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-      }
-    }, 500);
-  };
-  
-  utterance.onerror = () => {
-    if (mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
+  if (!txt) { showMsg(msg, 'Enter some text', true); return; }
+  if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return; }
+
+  const { voice } = getSelectedVoice();
+  const chunks = splitTextIntoChunks(txt, 200); // StreamElements works best with short chunks
+  const totalChunks = chunks.length;
+
+  showMsg(msg, 'Generating MP3... 0/' + totalChunks + ' parts done', false);
+
+  try {
+    const audioBuffers = [];
+
+    for (let i = 0; i < chunks.length; i++) {
+      const encodedText = encodeURIComponent(chunks[i]);
+      const url = 'https://api.streamelements.com/kappa/v2/speech?voice=' + voice + '&text=' + encodedText;
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed at chunk ' + (i + 1) + '. Try again.');
+
+      const buffer = await response.arrayBuffer();
+      audioBuffers.push(buffer);
+
+      showMsg(msg, 'Generating MP3... ' + (i + 1) + '/' + totalChunks + ' parts done', false);
     }
-  };
-  
-  // Speak
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
-}
 
-function audioBufferToWav(audioBuffer) {
-  const numberOfChannels = audioBuffer.numberOfChannels;
-  const sampleRate = audioBuffer.sampleRate;
-  const format = 1; // PCM
-  const bitDepth = 16;
+    // Concatenate all MP3 buffers into one blob
+    const totalLength = audioBuffers.reduce((sum, buf) => sum + buf.byteLength, 0);
+    const combined = new Uint8Array(totalLength);
+    let offset = 0;
 
-  const bytesPerSample = bitDepth / 8;
-  const blockAlign = numberOfChannels * bytesPerSample;
+    audioBuffers.forEach(buf => {
+      combined.set(new Uint8Array(buf), offset);
+      offset += buf.byteLength;
+    });
 
-  const channelData = [];
-  for (let i = 0; i < numberOfChannels; i++) {
-    channelData.push(audioBuffer.getChannelData(i));
+    const blob = new Blob([combined], { type: 'audio/mpeg' });
+    downloadFile(blob, 'voice_' + Date.now() + '.mp3');
+    showMsg(msg, '✅ MP3 downloaded successfully!', false);
+
+  } catch (err) {
+    showMsg(msg, '❌ Error: ' + err.message, true);
   }
-
-  const interleaved = interleaveChannels(channelData);
-  const dataLength = interleaved.length * bytesPerSample;
-  const buffer = new ArrayBuffer(44 + dataLength);
-  const view = new DataView(buffer);
-
-  const writeString = (offset, string) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  };
-
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + dataLength, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
-  view.setUint16(22, numberOfChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * blockAlign, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitDepth, true);
-  writeString(36, 'data');
-  view.setUint32(40, dataLength, true);
-
-  let offset = 44;
-  const volume = 0.8;
-  for (let i = 0; i < interleaved.length; i++) {
-    view.setInt16(offset, interleaved[i] * volume * 0x7fff, true);
-    offset += 2;
-  }
-
-  return new Blob([buffer], { type: 'audio/wav' });
-}
-
-function interleaveChannels(channelData) {
-  const length = channelData[0].length;
-  const result = new Float32Array(length * channelData.length);
-  let index = 0;
-  let inputIndex = 0;
-
-  while (inputIndex < length) {
-    for (let i = 0; i < channelData.length; i++) {
-      result[index++] = channelData[i][inputIndex];
-    }
-    inputIndex++;
-  }
-  return result;
 }
 
 // ===== TOOL 4: Translate SRT =====
 function translateSrt() {
   const file = document.getElementById('srtFile').files[0];
   const msg = 'srtMsg';
-  
-  if (!file) {
-    showMsg(msg, 'Select a SRT file', true);
-    return;
-  }
-  
-  if (file.size > 5242880) {
-    showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true);
-    return;
-  }
-  
+  if (!file) { showMsg(msg, 'Select a SRT file', true); return; }
+  if (file.size > 5242880) { showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true); return; }
   const targetLang = document.getElementById('targetLang').value;
   showMsg(msg, 'Translating... please wait', false);
-  
   const reader = new FileReader();
   reader.onload = function(e) {
     const content = e.target.result;
     const lines = content.split('\n');
     const subtitles = [];
-    
-    // Parse SRT format
     let current = {};
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -550,13 +427,7 @@ function translateSrt() {
       }
     }
     if (current.text) subtitles.push(current);
-    
-    if (subtitles.length === 0) {
-      showMsg(msg, 'No subtitles found in file', true);
-      return;
-    }
-    
-    // Translate each subtitle
+    if (subtitles.length === 0) { showMsg(msg, 'No subtitles found in file', true); return; }
     let translated = 0;
     subtitles.forEach(function(sub) {
       fetch('https://libretranslate.com/translate', {
@@ -568,21 +439,16 @@ function translateSrt() {
       .then(d => {
         sub.text = d.translatedText || sub.text;
         translated++;
-        
         if (translated === subtitles.length) {
-          // Rebuild SRT
           let srtContent = '';
           subtitles.forEach(function(sub, idx) {
             srtContent += (idx + 1) + '\n' + sub.timing + '\n' + sub.text + '\n\n';
           });
-          
           downloadFile(new Blob([srtContent], { type: 'text/plain' }), 'translated_' + file.name);
           showMsg(msg, 'SRT downloaded!', false);
         }
       })
-      .catch(err => {
-        showMsg(msg, 'Translation error: ' + err.message, true);
-      });
+      .catch(err => { showMsg(msg, 'Translation error: ' + err.message, true); });
     });
   };
   reader.readAsText(file);
@@ -593,26 +459,12 @@ function downloadYtSubs() {
   const url = document.getElementById('ytUrl').value.trim();
   const lang = document.getElementById('ytLang').value;
   const msg = 'ytMsg';
-  
-  if (!url) {
-    showMsg(msg, 'Paste a YouTube URL', true);
-    return;
-  }
-  
+  if (!url) { showMsg(msg, 'Paste a YouTube URL', true); return; }
   let videoId = '';
-  try {
-    videoId = new URL(url).searchParams.get('v');
-  } catch (e) {}
-  
-  if (!videoId) {
-    showMsg(msg, 'Invalid YouTube URL', true);
-    return;
-  }
-  
+  try { videoId = new URL(url).searchParams.get('v'); } catch (e) {}
+  if (!videoId) { showMsg(msg, 'Invalid YouTube URL', true); return; }
   showMsg(msg, 'Fetching subtitles...', false);
-  
   const apiUrl = 'https://youtubetranscript.com/?server_vid2=' + videoId + '&lang=' + lang;
-  
   fetch(apiUrl)
     .then(r => r.text())
     .then(txt => {
@@ -623,9 +475,7 @@ function downloadYtSubs() {
         showMsg(msg, 'Subtitles not found. Try another language or video.', true);
       }
     })
-    .catch(err => {
-      showMsg(msg, 'Error: ' + err.message, true);
-    });
+    .catch(err => { showMsg(msg, 'Error: ' + err.message, true); });
 }
 </script>
 
