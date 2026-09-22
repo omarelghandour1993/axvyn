@@ -363,19 +363,58 @@ document.getElementById('ttsText').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length + ' / 3000';
 });
 
+// Preload voices on page ready
+window.speechSynthesis.onvoiceschanged = function() {
+  window.speechSynthesis.getVoices();
+};
+
 function playText() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
   if (!txt) { showMsg(msg, 'Enter some text', true); return; }
   if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return; }
+
   const rate = parseFloat(document.getElementById('speechRate').value) || 1;
+
+  // Get selected language code e.g. "en-US" from "en-US|Joanna"
+  const selected = document.getElementById('voiceLanguage').value;
+  const langCode = selected.split('|')[0]; // e.g. "en-US"
+  const voiceName = selected.split('|')[1]; // e.g. "Joanna"
+
+  // Get all available browser voices
+  const voices = window.speechSynthesis.getVoices();
+
+  // Special handling for Arabic/Chinese which use non-standard codes
+  let searchLang = langCode;
+  if (langCode === 'arb') searchLang = 'ar';
+  if (langCode === 'cmn-CN') searchLang = 'zh-CN';
+  if (langCode === 'yue-CN') searchLang = 'zh-HK';
+
+  // Try exact match first
+  let matchedVoice = voices.find(v => v.lang === searchLang);
+
+  // If no exact match, try partial match on language prefix
+  if (!matchedVoice) {
+    const langPrefix = searchLang.split('-')[0];
+    matchedVoice = voices.find(v => v.lang.startsWith(langPrefix));
+  }
+
   currentUtterance = new SpeechSynthesisUtterance(txt);
   currentUtterance.rate = rate;
+  currentUtterance.lang = searchLang;
+
+  if (matchedVoice) {
+    currentUtterance.voice = matchedVoice;
+  }
+
   currentUtterance.onend = function() { showMsg(msg, '✅ Playback finished!', false); };
   currentUtterance.onerror = function(e) { showMsg(msg, 'Error: ' + e.error, true); };
+
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(currentUtterance);
-  showMsg(msg, '▶️ Playing...', false);
+
+  const displayVoice = matchedVoice ? matchedVoice.name : langCode;
+  showMsg(msg, '▶️ Playing in: ' + voiceName + ' (' + displayVoice + ')', false);
 }
 
 function stopAudio() {
@@ -389,34 +428,22 @@ async function downloadAudio() {
   if (!txt) { showMsg(msg, 'Enter some text', true); return; }
   if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return; }
 
-  // Parse voice and language from select value like "en-US|Joanna"
   const selected = document.getElementById('voiceLanguage').value;
   const parts = selected.split('|');
-  const langCode = parts[0];   // e.g. "en-US"
-  const voiceName = parts[1];  // e.g. "Joanna"
+  const langCode = parts[0];
+  const voiceName = parts[1];
 
   showMsg(msg, '⏳ Generating MP3... please wait', false);
 
   try {
-    // CORRECT Puter.js API call:
-    // puter.ai.txt2speech(text, language_code)
-    // language_code must be a valid AWS Polly language code
     const audioEl = await puter.ai.txt2speech(txt, langCode);
-
-    // audioEl is an HTMLAudioElement
-    // Get the audio src blob URL
     const audioSrc = audioEl.src;
-
     if (!audioSrc) throw new Error('No audio returned from API');
-
-    // Fetch the audio as blob and download
     const response = await fetch(audioSrc);
     if (!response.ok) throw new Error('Could not fetch audio data');
-
     const blob = await response.blob();
     downloadFile(blob, 'voice_' + voiceName + '_' + Date.now() + '.mp3');
     showMsg(msg, '✅ MP3 downloaded! Voice: ' + voiceName, false);
-
   } catch (err) {
     console.error('TTS Error:', err);
     showMsg(msg, '❌ Error: ' + err.message, true);
