@@ -1,519 +1,77 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset='UTF-8'/>
-<meta name='viewport' content='width=device-width, initial-scale=1'/>
-<title>Axvyn - Free Online Tools</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px}
-.container{max-width:900px;margin:0 auto;background:white;padding:30px;border-radius:5px;box-shadow:0 2px 5px rgba(0,0,0,0.1)}
-h1{color:#333;margin-bottom:10px;text-align:center;font-size:28px}
-.subtitle{text-align:center;color:#666;margin-bottom:30px;font-size:14px}
-p.info{text-align:center;color:#999;font-size:12px;margin-bottom:30px}
-.card{border:1px solid #ddd;border-radius:5px;margin-bottom:20px;overflow:hidden}
-.card-header{background:#f0f0f0;padding:15px;font-weight:bold;color:#333;border-bottom:1px solid #ddd}
-.card-body{padding:20px}
-input,textarea,select{width:100%;padding:10px;margin:5px 0 15px 0;border:1px solid #ddd;border-radius:3px;font-family:Arial,sans-serif;font-size:14px}
-textarea{resize:vertical;min-height:100px}
-button{background:#007bff;color:white;padding:10px 20px;border:none;border-radius:3px;cursor:pointer;font-size:14px;margin-right:5px;margin-top:10px}
-button:hover{background:#0056b3}
-button.secondary{background:#6c757d}
-button.secondary:hover{background:#5a6268}
-button.danger{background:#dc3545}
-button.danger:hover{background:#c82333}
-button.success{background:#28a745}
-button.success:hover{background:#218838}
-.msg{margin-top:10px;font-size:13px;padding:10px;border-radius:3px;display:none}
-.msg.show{display:block}
-.error{background:#ffe6e6;color:#d00;border:1px solid #fcc}
-.success-msg{background:#e6ffe6;color:#060;border:1px solid #cfc}
-label{display:block;margin-top:15px;margin-bottom:5px;font-weight:bold;font-size:13px}
-small{display:block;margin-top:5px;color:#999}
-.footer{text-align:center;color:#999;font-size:11px;margin-top:40px;padding-top:20px;border-top:1px solid #ddd}
-.button-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
-.divider{border:none;border-top:1px dashed #ddd;margin:15px 0}
-.section-title{font-size:12px;font-weight:bold;color:#888;text-transform:uppercase;letter-spacing:1px;margin:15px 0 5px 0}
-</style>
-</head>
-<body>
-
-<div class='container'>
-<h1>⚙️ Axvyn</h1>
-<p class='subtitle'>Free Online File and Media Tools</p>
-<p class='info'>All tools work in your browser. No files are uploaded anywhere.</p>
-
-<!-- Tool 1: Word to PDF -->
-<div class='card'>
-<div class='card-header'>📄 Word (.docx) to PDF (Max 5 MB)</div>
-<div class='card-body'>
-<label>Select Word File:</label>
-<input type='file' id='docxFile' accept='.docx'/>
-<button onclick='convertDocxToPdf()'>Convert & Download PDF</button>
-<div id='docxMsg' class='msg'></div>
-</div>
-</div>
-
-<!-- Tool 2: Image Compressor -->
-<div class='card'>
-<div class='card-header'>🖼️ Image Compressor (Max 5 MB)</div>
-<div class='card-body'>
-<label>Select Image:</label>
-<input type='file' id='imgFile' accept='image/*'/>
-<label>Quality:</label>
-<input type='range' id='imgQuality' min='0.1' max='1' step='0.1' value='0.7'/>
-<small>Quality: <span id='qualityValue'>0.7</span></small>
-<button onclick='compressImg()'>Compress & Download</button>
-<div id='imgMsg' class='msg'></div>
-</div>
-</div>
-
-<!-- Tool 3: Text to Speech - Amazon Polly Only -->
-<div class='card'>
-<div class='card-header'>🔊 Text to Voice - Amazon Polly (Max 3000 chars)</div>
-<div class='card-body'>
-
-<label>Enter Text:</label>
-<textarea id='ttsText' placeholder='Type or paste text here'></textarea>
-<small id='charCount'>0 / 3000</small>
-
-<label>Speech Rate:</label>
-<input type='range' id='speechRate' min='0.5' max='2' step='0.1' value='1'/>
-<small>Speed: <span id='rateValue'>1</span>x</small>
-
-<p class='section-title'>🟠 Select Amazon Polly Voice (Same for Both Play & Download)</p>
-<label>Select Voice:</label>
-<select id='voiceLanguage'>
-  <optgroup label='🇺🇸 English (US)'>
-    <option value='en-US|Joanna'>English US - Joanna (Female)</option>
-    <option value='en-US|Matthew'>English US - Matthew (Male)</option>
-    <option value='en-US|Salli'>English US - Salli (Female)</option>
-    <option value='en-US|Joey'>English US - Joey (Male)</option>
-    <option value='en-US|Kendra'>English US - Kendra (Female)</option>
-    <option value='en-US|Kimberly'>English US - Kimberly (Female)</option>
-    <option value='en-US|Ruth'>English US - Ruth (Female)</option>
-    <option value='en-US|Justin'>English US - Justin (Male)</option>
-  </optgroup>
-  <optgroup label='🇬🇧 English (UK)'>
-    <option value='en-GB|Amy'>English UK - Amy (Female)</option>
-    <option value='en-GB|Brian'>English UK - Brian (Male)</option>
-    <option value='en-GB|Emma'>English UK - Emma (Female)</option>
-  </optgroup>
-  <optgroup label='🇦🇺 English (AU)'>
-    <option value='en-AU|Nicole'>English AU - Nicole (Female)</option>
-    <option value='en-AU|Olivia'>English AU - Olivia (Female)</option>
-  </optgroup>
-  <optgroup label='🇮🇳 English (IN)'>
-    <option value='en-IN|Aditi'>English IN - Aditi (Female)</option>
-    <option value='en-IN|Raveena'>English IN - Raveena (Female)</option>
-  </optgroup>
-  <optgroup label='🇪🇸 Spanish'>
-    <option value='es-ES|Conchita'>Spanish ES - Conchita (Female)</option>
-    <option value='es-ES|Enrique'>Spanish ES - Enrique (Male)</option>
-    <option value='es-ES|Lucia'>Spanish ES - Lucia (Female)</option>
-    <option value='es-MX|Mia'>Spanish MX - Mia (Female)</option>
-    <option value='es-US|Penelope'>Spanish US - Penelope (Female)</option>
-    <option value='es-US|Miguel'>Spanish US - Miguel (Male)</option>
-    <option value='es-US|Lupe'>Spanish US - Lupe (Female)</option>
-  </optgroup>
-  <optgroup label='🇫🇷 French'>
-    <option value='fr-FR|Celine'>French FR - Celine (Female)</option>
-    <option value='fr-FR|Mathieu'>French FR - Mathieu (Male)</option>
-    <option value='fr-FR|Lea'>French FR - Lea (Female)</option>
-    <option value='fr-CA|Chantal'>French CA - Chantal (Female)</option>
-    <option value='fr-CA|Gabrielle'>French CA - Gabrielle (Female)</option>
-  </optgroup>
-  <optgroup label='🇩🇪 German'>
-    <option value='de-DE|Marlene'>German - Marlene (Female)</option>
-    <option value='de-DE|Hans'>German - Hans (Male)</option>
-    <option value='de-DE|Vicki'>German - Vicki (Female)</option>
-  </optgroup>
-  <optgroup label='🇮🇹 Italian'>
-    <option value='it-IT|Carla'>Italian - Carla (Female)</option>
-    <option value='it-IT|Giorgio'>Italian - Giorgio (Male)</option>
-    <option value='it-IT|Bianca'>Italian - Bianca (Female)</option>
-  </optgroup>
-  <optgroup label='🇧🇷 Portuguese'>
-    <option value='pt-BR|Vitoria'>Portuguese BR - Vitoria (Female)</option>
-    <option value='pt-BR|Ricardo'>Portuguese BR - Ricardo (Male)</option>
-    <option value='pt-BR|Camila'>Portuguese BR - Camila (Female)</option>
-    <option value='pt-PT|Ines'>Portuguese PT - Ines (Female)</option>
-    <option value='pt-PT|Cristiano'>Portuguese PT - Cristiano (Male)</option>
-  </optgroup>
-  <optgroup label='🇷🇺 Russian'>
-    <option value='ru-RU|Tatyana'>Russian - Tatyana (Female)</option>
-    <option value='ru-RU|Maxim'>Russian - Maxim (Male)</option>
-  </optgroup>
-  <optgroup label='🇸🇦 Arabic'>
-    <option value='arb|Zeina'>Arabic - Zeina (Female)</option>
-    <option value='ar-AE|Hala'>Arabic AE - Hala (Female)</option>
-  </optgroup>
-  <optgroup label='🇯🇵 Japanese'>
-    <option value='ja-JP|Mizuki'>Japanese - Mizuki (Female)</option>
-    <option value='ja-JP|Takumi'>Japanese - Takumi (Male)</option>
-    <option value='ja-JP|Kazuha'>Japanese - Kazuha (Female)</option>
-  </optgroup>
-  <optgroup label='🇨🇳 Chinese'>
-    <option value='cmn-CN|Zhiyu'>Chinese Mandarin - Zhiyu (Female)</option>
-    <option value='yue-CN|Hiujin'>Chinese Cantonese - Hiujin (Female)</option>
-  </optgroup>
-  <optgroup label='🇮🇳 Hindi'>
-    <option value='hi-IN|Aditi'>Hindi - Aditi (Female)</option>
-    <option value='hi-IN|Kajal'>Hindi - Kajal (Female)</option>
-  </optgroup>
-  <optgroup label='🇰🇷 Korean'>
-    <option value='ko-KR|Seoyeon'>Korean - Seoyeon (Female)</option>
-  </optgroup>
-  <optgroup label='🇹🇷 Turkish'>
-    <option value='tr-TR|Filiz'>Turkish - Filiz (Female)</option>
-  </optgroup>
-  <optgroup label='🇳🇱 Dutch'>
-    <option value='nl-NL|Lotte'>Dutch - Lotte (Female)</option>
-    <option value='nl-NL|Ruben'>Dutch - Ruben (Male)</option>
-  </optgroup>
-  <optgroup label='🇸🇪 Swedish'>
-    <option value='sv-SE|Astrid'>Swedish - Astrid (Female)</option>
-  </optgroup>
-  <optgroup label='🇩🇰 Danish'>
-    <option value='da-DK|Naja'>Danish - Naja (Female)</option>
-    <option value='da-DK|Mads'>Danish - Mads (Male)</option>
-  </optgroup>
-  <optgroup label='🇳🇴 Norwegian'>
-    <option value='nb-NO|Liv'>Norwegian - Liv (Female)</option>
-  </optgroup>
-  <optgroup label='🇵🇱 Polish'>
-    <option value='pl-PL|Ewa'>Polish - Ewa (Female)</option>
-    <option value='pl-PL|Jacek'>Polish - Jacek (Male)</option>
-    <option value='pl-PL|Jan'>Polish - Jan (Male)</option>
-    <option value='pl-PL|Maja'>Polish - Maja (Female)</option>
-  </optgroup>
-  <optgroup label='🇷🇴 Romanian'>
-    <option value='ro-RO|Carmen'>Romanian - Carmen (Female)</option>
-  </optgroup>
-  <optgroup label='🇨🇿 Czech'>
-    <option value='cs-CZ|Jakub'>Czech - Jakub (Male)</option>
-  </optgroup>
-  <optgroup label='🇮🇸 Icelandic'>
-    <option value='is-IS|Dora'>Icelandic - Dora (Female)</option>
-    <option value='is-IS|Karl'>Icelandic - Karl (Male)</option>
-  </optgroup>
-  <optgroup label='🏴󠁧󠁢󠁷󠁬󠁳󠁿 Welsh'>
-    <option value='cy-GB|Gwyneth'>Welsh - Gwyneth (Female)</option>
-  </optgroup>
-</select>
-
-<div class='button-group'>
-  <button class='success' onclick='playPollyVoice()'>🟠 Play Voice</button>
-  <button class='secondary' onclick='downloadPollyAudio()'>⬇️ Download as MP3</button>
-  <button class='danger' onclick='stopPollyAudio()'>⏹️ Stop</button>
-</div>
-
-<div id='ttsMsg' class='msg'></div>
-</div>
-</div>
-
-<!-- Tool 4: SRT Subtitle Translator -->
-<div class='card'>
-<div class='card-header'>📝 Translate SRT Subtitles (Max 5 MB)</div>
-<div class='card-body'>
-<label>Select SRT File:</label>
-<input type='file' id='srtFile' accept='.srt'/>
-<label>Translate To:</label>
-<select id='targetLang'>
-<option value='en'>English</option>
-<option value='es'>Spanish</option>
-<option value='fr'>French</option>
-<option value='de'>German</option>
-<option value='pt'>Portuguese</option>
-<option value='ru'>Russian</option>
-<option value='ar'>Arabic</option>
-<option value='zh'>Chinese</option>
-<option value='hi'>Hindi</option>
-<option value='ja'>Japanese</option>
-</select>
-<button onclick='translateSrt()'>Translate & Download</button>
-<div id='srtMsg' class='msg'></div>
-</div>
-</div>
-
-<!-- Tool 5: YouTube Subtitle Downloader -->
-<div class='card'>
-<div class='card-header'>🎥 Download YouTube Subtitles (All Languages)</div>
-<div class='card-body'>
-<label>YouTube Video URL:</label>
-<input type='text' id='ytUrl' placeholder='https://www.youtube.com/watch?v=...'/>
-<label>Language:</label>
-<select id='ytLang'>
-<option value='auto'>Auto (Auto Captions)</option>
-<option value='en'>English</option>
-<option value='es'>Spanish</option>
-<option value='fr'>French</option>
-<option value='de'>German</option>
-<option value='pt'>Portuguese</option>
-<option value='ru'>Russian</option>
-<option value='ar'>Arabic</option>
-<option value='zh'>Chinese</option>
-<option value='hi'>Hindi</option>
-<option value='ja'>Japanese</option>
-<option value='ko'>Korean</option>
-<option value='it'>Italian</option>
-<option value='nl'>Dutch</option>
-<option value='pl'>Polish</option>
-<option value='tr'>Turkish</option>
-</select>
-<button onclick='downloadYtSubs()'>Fetch & Download SRT</button>
-<div id='ytMsg' class='msg'></div>
-</div>
-</div>
-
-<div class='footer'>
-<p>© 2024 Axvyn. All tools work entirely in your browser.</p>
-</div>
-</div>
-
-<!-- Libraries - Working CDN with loader check -->
-<script src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/0.3.2/mammoth.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'></script>
-<script src='https://js.puter.com/v2/'></script>
-
-<script>
-// Wait for mammoth to load
-let mammothReady = false;
-let maxWait = 5000;
-let checkInterval = setInterval(function() {
-  if (typeof mammoth !== 'undefined') {
-    mammothReady = true;
-    clearInterval(checkInterval);
-  }
-}, 100);
-
-setTimeout(function() {
-  if (!mammothReady) {
-    console.error('Mammoth library failed to load');
-  }
-}, maxWait);
-
-let pollyAudio = null;
-
-function bytesToMB(bytes) { return (bytes / 1048576).toFixed(2); }
-
-function showMsg(elementId, text, isError) {
-  const el = document.getElementById(elementId);
-  el.textContent = text;
-  el.classList.add('show');
-  el.classList.remove(isError ? 'success-msg' : 'error');
-  el.classList.add(isError ? 'error' : 'success-msg');
-}
-
-function downloadFile(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ===== TOOL 1: Word to PDF =====
 function convertDocxToPdf() {
   const file = document.getElementById('docxFile').files[0];
   const msg = 'docxMsg';
-  if (!file) { showMsg(msg, 'Select a Word file (.docx)', true); return; }
-  if (file.size > 5242880) { showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true); return; }
-  if (typeof mammoth === 'undefined') { showMsg(msg, 'Loading library... please wait and try again', true); return; }
+
+  if (!file) {
+    showMsg(msg, 'Select a Word file (.docx)', true);
+    return;
+  }
+
+  if (!file.name.toLowerCase().endsWith('.docx')) {
+    showMsg(msg, 'Please select a valid .docx file', true);
+    return;
+  }
+
+  if (file.size > 5242880) {
+    showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true);
+    return;
+  }
+
+  if (mammothLoadFailed || typeof mammoth === 'undefined') {
+    showMsg(
+      msg,
+      'The Word conversion library could not load. Check your internet connection and reload the page.',
+      true
+    );
+    return;
+  }
+
   showMsg(msg, 'Converting... please wait', false);
+
   const reader = new FileReader();
+
   reader.onload = function(e) {
-    try {
-      mammoth.convertToHtml({ arrayBuffer: e.target.result }).then(function(result) {
-        const element = document.createElement('div');
-        element.innerHTML = result.value;
-        const opt = {
-          margin: 10,
-          filename: file.name.replace(/\.docx$/i, '') + '.pdf',
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-        };
-        html2pdf().set(opt).from(element).save();
-        showMsg(msg, 'PDF downloaded!', false);
-      }).catch(function(err) { showMsg(msg, 'Error: ' + err.message, true); });
-    } catch (err) { showMsg(msg, 'Error: ' + err.message, true); }
-  };
-  reader.readAsArrayBuffer(file);
-}
+    mammoth.convertToHtml({
+      arrayBuffer: e.target.result
+    })
+    .then(function(result) {
+      const element = document.createElement('div');
+      element.innerHTML = result.value;
 
-// ===== TOOL 2: Image Compressor =====
-document.getElementById('imgQuality').addEventListener('input', function() {
-  document.getElementById('qualityValue').textContent = this.value;
-});
-
-function compressImg() {
-  const file = document.getElementById('imgFile').files[0];
-  const msg = 'imgMsg';
-  if (!file) { showMsg(msg, 'Select an image', true); return; }
-  if (file.size > 5242880) { showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true); return; }
-  showMsg(msg, 'Compressing...', false);
-  const quality = parseFloat(document.getElementById('imgQuality').value);
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const img = new Image();
-  img.onload = function() {
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx.drawImage(img, 0, 0);
-    canvas.toBlob(function(blob) {
-      downloadFile(blob, 'compressed_' + file.name);
-      showMsg(msg, 'Image downloaded!', false);
-    }, 'image/jpeg', quality);
-  };
-  img.onerror = function() { showMsg(msg, 'Error loading image', true); };
-  img.src = URL.createObjectURL(file);
-}
-
-// ===== TOOL 3: Text to Speech =====
-document.getElementById('speechRate').addEventListener('input', function() {
-  document.getElementById('rateValue').textContent = this.value;
-});
-
-document.getElementById('ttsText').addEventListener('input', function() {
-  document.getElementById('charCount').textContent = this.value.length + ' / 3000';
-});
-
-function validateText(msg) {
-  const txt = document.getElementById('ttsText').value.trim();
-  if (!txt) { showMsg(msg, 'Enter some text', true); return null; }
-  if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return null; }
-  return txt;
-}
-
-async function playPollyVoice() {
-  const txt = validateText('ttsMsg');
-  if (!txt) return;
-  const selected = document.getElementById('voiceLanguage').value;
-  const parts = selected.split('|');
-  const langCode = parts[0];
-  const voiceName = parts[1];
-  showMsg('ttsMsg', '⏳ Loading Amazon Polly: ' + voiceName + '...', false);
-  try {
-    if (pollyAudio) { pollyAudio.pause(); pollyAudio = null; }
-    const audioEl = await puter.ai.txt2speech(txt, langCode);
-    pollyAudio = audioEl;
-    pollyAudio.onended = function() { showMsg('ttsMsg', '✅ Playback finished! (' + voiceName + ')', false); };
-    pollyAudio.play();
-    showMsg('ttsMsg', '▶️ Playing: ' + voiceName, false);
-  } catch (err) {
-    showMsg('ttsMsg', '❌ Error: ' + err.message, true);
-  }
-}
-
-function stopPollyAudio() {
-  if (pollyAudio) { pollyAudio.pause(); pollyAudio.currentTime = 0; pollyAudio = null; }
-  document.getElementById('ttsMsg').classList.remove('show');
-}
-
-async function downloadPollyAudio() {
-  const txt = validateText('ttsMsg');
-  if (!txt) return;
-  const selected = document.getElementById('voiceLanguage').value;
-  const parts = selected.split('|');
-  const langCode = parts[0];
-  const voiceName = parts[1];
-  showMsg('ttsMsg', '⏳ Generating MP3: ' + voiceName + '...', false);
-  try {
-    const audioEl = await puter.ai.txt2speech(txt, langCode);
-    const audioSrc = audioEl.src;
-    if (!audioSrc) throw new Error('No audio returned from API');
-    const response = await fetch(audioSrc);
-    if (!response.ok) throw new Error('Could not fetch audio data');
-    const blob = await response.blob();
-    downloadFile(blob, 'voice_' + voiceName + '_' + Date.now() + '.mp3');
-    showMsg('ttsMsg', '✅ Downloaded: ' + voiceName + '.mp3', false);
-  } catch (err) {
-    showMsg('ttsMsg', '❌ Error: ' + err.message, true);
-  }
-}
-
-// ===== TOOL 4: Translate SRT =====
-function translateSrt() {
-  const file = document.getElementById('srtFile').files[0];
-  const msg = 'srtMsg';
-  if (!file) { showMsg(msg, 'Select a SRT file', true); return; }
-  if (file.size > 5242880) { showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true); return; }
-  const targetLang = document.getElementById('targetLang').value;
-  showMsg(msg, 'Translating... please wait', false);
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const content = e.target.result;
-    const lines = content.split('\n');
-    const subtitles = [];
-    let current = {};
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      if (/^\d+$/.test(line)) {
-        if (current.text) subtitles.push(current);
-        current = { index: line };
-      } else if (line.includes('-->')) {
-        current.timing = line;
-      } else {
-        current.text = (current.text ? current.text + ' ' : '') + line;
-      }
-    }
-    if (current.text) subtitles.push(current);
-    if (subtitles.length === 0) { showMsg(msg, 'No subtitles found in file', true); return; }
-    let translated = 0;
-    subtitles.forEach(function(sub) {
-      fetch('https://libretranslate.com/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q: sub.text, source: 'auto', target: targetLang })
-      })
-      .then(r => r.json())
-      .then(d => {
-        sub.text = d.translatedText || sub.text;
-        translated++;
-        if (translated === subtitles.length) {
-          let srtContent = '';
-          subtitles.forEach(function(sub, idx) {
-            srtContent += (idx + 1) + '\n' + sub.timing + '\n' + sub.text + '\n\n';
-          });
-          downloadFile(new Blob([srtContent], { type: 'text/plain' }), 'translated_' + file.name);
-          showMsg(msg, 'SRT downloaded!', false);
+      const opt = {
+        margin: 10,
+        filename: file.name.replace(/\.docx$/i, '') + '.pdf',
+        image: {
+          type: 'jpeg',
+          quality: 0.98
+        },
+        html2canvas: {
+          scale: 2
+        },
+        jsPDF: {
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
         }
-      })
-      .catch(err => { showMsg(msg, 'Translation error: ' + err.message, true); });
+      };
+
+      return html2pdf()
+        .set(opt)
+        .from(element)
+        .save();
+    })
+    .then(function() {
+      showMsg(msg, 'PDF downloaded!', false);
+    })
+    .catch(function(err) {
+      console.error('DOCX conversion error:', err);
+      showMsg(msg, 'Error converting file: ' + err.message, true);
     });
   };
-  reader.readAsText(file);
-}
 
-// ===== TOOL 5: YouTube Subtitles =====
-function downloadYtSubs() {
-  const url = document.getElementById('ytUrl').value.trim();
-  const lang = document.getElementById('ytLang').value;
-  const msg = 'ytMsg';
-  if (!url) { showMsg(msg, 'Paste a YouTube URL', true); return; }
-  let videoId = '';
-  try { videoId = new URL(url).searchParams.get('v'); } catch (e) {}
-  if (!videoId) { showMsg(msg, 'Invalid YouTube URL', true); return; }
-  showMsg(msg, 'Fetching subtitles...', false);
-  const apiUrl = 'https://youtubetranscript.com/?server_vid2=' + videoId + '&lang=' + lang;
-  fetch(apiUrl)
-    .then(r => r.text())
-    .then(txt => {
-      if (txt && txt.includes('-->')) {
-        downloadFile(new Blob([txt], { type: 'text/plain' }), videoId + '_' + lang + '.srt');
-        showMsg(msg, 'SRT downloaded!', false);
-      } else {
-        showMsg(msg, 'Subtitles not found. Try another language or video.', true);
-      }
-    })
-    .catch(err => { showMsg(msg, 'Error: ' + err.message, true); });
-}
-</script>
+  reader.onerror = function() {
+    showMsg(msg, 'Could not read the selected file.', true);
+  };
 
-</body>
-</html>
+  reader.readAsArrayBuffer(file);
+}
