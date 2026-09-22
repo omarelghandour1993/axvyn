@@ -271,12 +271,28 @@ small{display:block;margin-top:5px;color:#999}
 </div>
 </div>
 
-<!-- Libraries - FIXED MAMMOTH CDN -->
-<script src='https://unpkg.com/mammoth@1.8.1/mammoth.browser.min.js'></script>
+<!-- Libraries - Working CDN with loader check -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/0.3.2/mammoth.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'></script>
 <script src='https://js.puter.com/v2/'></script>
 
 <script>
+// Wait for mammoth to load
+let mammothReady = false;
+let maxWait = 5000;
+let checkInterval = setInterval(function() {
+  if (typeof mammoth !== 'undefined') {
+    mammothReady = true;
+    clearInterval(checkInterval);
+  }
+}, 100);
+
+setTimeout(function() {
+  if (!mammothReady) {
+    console.error('Mammoth library failed to load');
+  }
+}, maxWait);
+
 let pollyAudio = null;
 
 function bytesToMB(bytes) { return (bytes / 1048576).toFixed(2); }
@@ -306,6 +322,7 @@ function convertDocxToPdf() {
   const msg = 'docxMsg';
   if (!file) { showMsg(msg, 'Select a Word file (.docx)', true); return; }
   if (file.size > 5242880) { showMsg(msg, 'File is ' + bytesToMB(file.size) + ' MB. Max is 5 MB.', true); return; }
+  if (typeof mammoth === 'undefined') { showMsg(msg, 'Loading library... please wait and try again', true); return; }
   showMsg(msg, 'Converting... please wait', false);
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -372,7 +389,6 @@ function validateText(msg) {
   return txt;
 }
 
-// Play Amazon Polly Voice - Changes with dropdown
 async function playPollyVoice() {
   const txt = validateText('ttsMsg');
   if (!txt) return;
@@ -398,7 +414,6 @@ function stopPollyAudio() {
   document.getElementById('ttsMsg').classList.remove('show');
 }
 
-// Download Amazon Polly MP3 - Same voice as Play
 async function downloadPollyAudio() {
   const txt = validateText('ttsMsg');
   if (!txt) return;
