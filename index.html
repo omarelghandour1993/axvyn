@@ -71,10 +71,9 @@ small{display:block;margin-top:5px;color:#999}
 <label>Enter Text:</label>
 <textarea id='ttsText' placeholder='Type or paste text here'></textarea>
 <small id='charCount'>0 / 3000</small>
-<label>Voice:</label>
+<label>Language / Voice:</label>
 <select id='voiceLanguage'>
   <optgroup label='🇺🇸 English (US)'>
-    <option value='en-US'>English US - Default</option>
     <option value='en-US|Joanna'>English US - Joanna (Female)</option>
     <option value='en-US|Matthew'>English US - Matthew (Male)</option>
     <option value='en-US|Salli'>English US - Salli (Female)</option>
@@ -82,22 +81,42 @@ small{display:block;margin-top:5px;color:#999}
     <option value='en-US|Kendra'>English US - Kendra (Female)</option>
     <option value='en-US|Kimberly'>English US - Kimberly (Female)</option>
     <option value='en-US|Ruth'>English US - Ruth (Female)</option>
+    <option value='en-US|Justin'>English US - Justin (Male)</option>
   </optgroup>
   <optgroup label='🇬🇧 English (UK)'>
     <option value='en-GB|Amy'>English UK - Amy (Female)</option>
     <option value='en-GB|Brian'>English UK - Brian (Male)</option>
     <option value='en-GB|Emma'>English UK - Emma (Female)</option>
   </optgroup>
-  <optgroup label='🇪🇸 Spanish'>
-    <option value='es-ES|Conchita'>Spanish - Conchita (Female)</option>
-    <option value='es-ES|Enrique'>Spanish - Enrique (Male)</option>
+  <optgroup label='🇦🇺 English (AU)'>
+    <option value='en-AU|Nicole'>English AU - Nicole (Female)</option>
+    <option value='en-AU|Olivia'>English AU - Olivia (Female)</option>
+  </optgroup>
+  <optgroup label='🇮🇳 English (IN)'>
+    <option value='en-IN|Aditi'>English IN - Aditi (Female)</option>
+    <option value='en-IN|Raveena'>English IN - Raveena (Female)</option>
+  </optgroup>
+  <optgroup label='🇪🇸 Spanish (ES)'>
+    <option value='es-ES|Conchita'>Spanish ES - Conchita (Female)</option>
+    <option value='es-ES|Enrique'>Spanish ES - Enrique (Male)</option>
+    <option value='es-ES|Lucia'>Spanish ES - Lucia (Female)</option>
+  </optgroup>
+  <optgroup label='🇲🇽 Spanish (MX)'>
+    <option value='es-MX|Mia'>Spanish MX - Mia (Female)</option>
+  </optgroup>
+  <optgroup label='🇺🇸 Spanish (US)'>
     <option value='es-US|Penelope'>Spanish US - Penelope (Female)</option>
     <option value='es-US|Miguel'>Spanish US - Miguel (Male)</option>
+    <option value='es-US|Lupe'>Spanish US - Lupe (Female)</option>
   </optgroup>
-  <optgroup label='🇫🇷 French'>
-    <option value='fr-FR|Celine'>French - Celine (Female)</option>
-    <option value='fr-FR|Mathieu'>French - Mathieu (Male)</option>
-    <option value='fr-FR|Lea'>French - Lea (Female)</option>
+  <optgroup label='🇫🇷 French (FR)'>
+    <option value='fr-FR|Celine'>French FR - Celine (Female)</option>
+    <option value='fr-FR|Mathieu'>French FR - Mathieu (Male)</option>
+    <option value='fr-FR|Lea'>French FR - Lea (Female)</option>
+  </optgroup>
+  <optgroup label='🇨🇦 French (CA)'>
+    <option value='fr-CA|Chantal'>French CA - Chantal (Female)</option>
+    <option value='fr-CA|Gabrielle'>French CA - Gabrielle (Female)</option>
   </optgroup>
   <optgroup label='🇩🇪 German'>
     <option value='de-DE|Marlene'>German - Marlene (Female)</option>
@@ -109,9 +128,12 @@ small{display:block;margin-top:5px;color:#999}
     <option value='it-IT|Giorgio'>Italian - Giorgio (Male)</option>
     <option value='it-IT|Bianca'>Italian - Bianca (Female)</option>
   </optgroup>
-  <optgroup label='🇧🇷 Portuguese'>
+  <optgroup label='🇧🇷 Portuguese (BR)'>
     <option value='pt-BR|Vitoria'>Portuguese BR - Vitoria (Female)</option>
     <option value='pt-BR|Ricardo'>Portuguese BR - Ricardo (Male)</option>
+    <option value='pt-BR|Camila'>Portuguese BR - Camila (Female)</option>
+  </optgroup>
+  <optgroup label='🇵🇹 Portuguese (PT)'>
     <option value='pt-PT|Ines'>Portuguese PT - Ines (Female)</option>
     <option value='pt-PT|Cristiano'>Portuguese PT - Cristiano (Male)</option>
   </optgroup>
@@ -120,20 +142,60 @@ small{display:block;margin-top:5px;color:#999}
     <option value='ru-RU|Maxim'>Russian - Maxim (Male)</option>
   </optgroup>
   <optgroup label='🇸🇦 Arabic'>
-    <option value='ar-SA|Zeina'>Arabic - Zeina (Female)</option>
+    <option value='arb|Zeina'>Arabic - Zeina (Female)</option>
+    <option value='ar-AE|Hala'>Arabic AE - Hala (Female)</option>
   </optgroup>
   <optgroup label='🇯🇵 Japanese'>
     <option value='ja-JP|Mizuki'>Japanese - Mizuki (Female)</option>
     <option value='ja-JP|Takumi'>Japanese - Takumi (Male)</option>
+    <option value='ja-JP|Kazuha'>Japanese - Kazuha (Female)</option>
   </optgroup>
   <optgroup label='🇨🇳 Chinese'>
-    <option value='zh-CN|Zhiyu'>Chinese - Zhiyu (Female)</option>
+    <option value='cmn-CN|Zhiyu'>Chinese Mandarin - Zhiyu (Female)</option>
+    <option value='yue-CN|Hiujin'>Chinese Cantonese - Hiujin (Female)</option>
   </optgroup>
   <optgroup label='🇮🇳 Hindi'>
     <option value='hi-IN|Aditi'>Hindi - Aditi (Female)</option>
+    <option value='hi-IN|Kajal'>Hindi - Kajal (Female)</option>
   </optgroup>
   <optgroup label='🇰🇷 Korean'>
     <option value='ko-KR|Seoyeon'>Korean - Seoyeon (Female)</option>
+  </optgroup>
+  <optgroup label='🇹🇷 Turkish'>
+    <option value='tr-TR|Filiz'>Turkish - Filiz (Female)</option>
+  </optgroup>
+  <optgroup label='🇳🇱 Dutch'>
+    <option value='nl-NL|Lotte'>Dutch - Lotte (Female)</option>
+    <option value='nl-NL|Ruben'>Dutch - Ruben (Male)</option>
+  </optgroup>
+  <optgroup label='🇸🇪 Swedish'>
+    <option value='sv-SE|Astrid'>Swedish - Astrid (Female)</option>
+  </optgroup>
+  <optgroup label='🇩🇰 Danish'>
+    <option value='da-DK|Naja'>Danish - Naja (Female)</option>
+    <option value='da-DK|Mads'>Danish - Mads (Male)</option>
+  </optgroup>
+  <optgroup label='🇳🇴 Norwegian'>
+    <option value='nb-NO|Liv'>Norwegian - Liv (Female)</option>
+  </optgroup>
+  <optgroup label='🇵🇱 Polish'>
+    <option value='pl-PL|Ewa'>Polish - Ewa (Female)</option>
+    <option value='pl-PL|Jacek'>Polish - Jacek (Male)</option>
+    <option value='pl-PL|Jan'>Polish - Jan (Male)</option>
+    <option value='pl-PL|Maja'>Polish - Maja (Female)</option>
+  </optgroup>
+  <optgroup label='🇷🇴 Romanian'>
+    <option value='ro-RO|Carmen'>Romanian - Carmen (Female)</option>
+  </optgroup>
+  <optgroup label='🇨🇿 Czech'>
+    <option value='cs-CZ|Jakub'>Czech - Jakub (Male)</option>
+  </optgroup>
+  <optgroup label='🇮🇸 Icelandic'>
+    <option value='is-IS|Dora'>Icelandic - Dora (Female)</option>
+    <option value='is-IS|Karl'>Icelandic - Karl (Male)</option>
+  </optgroup>
+  <optgroup label='🏴󠁧󠁢󠁷󠁬󠁳󠁿 Welsh'>
+    <option value='cy-GB|Gwyneth'>Welsh - Gwyneth (Female)</option>
   </optgroup>
 </select>
 <label>Speech Rate (Play only):</label>
@@ -215,7 +277,6 @@ small{display:block;margin-top:5px;color:#999}
 <script>
 let currentUtterance = null;
 
-// ===== HELPERS =====
 function bytesToMB(bytes) { return (bytes / 1048576).toFixed(2); }
 
 function showMsg(elementId, text, isError) {
@@ -302,7 +363,6 @@ document.getElementById('ttsText').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length + ' / 3000';
 });
 
-// Play using browser built-in TTS
 function playText() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
@@ -323,52 +383,42 @@ function stopAudio() {
   document.getElementById('ttsMsg').classList.remove('show');
 }
 
-// Download using Puter.js (correct API usage)
 async function downloadAudio() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
-
   if (!txt) { showMsg(msg, 'Enter some text', true); return; }
   if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return; }
 
-  // Parse voice and language from select
+  // Parse voice and language from select value like "en-US|Joanna"
   const selected = document.getElementById('voiceLanguage').value;
   const parts = selected.split('|');
-  const language = parts[0];         // e.g. "en-US"
-  const voice = parts[1] || null;    // e.g. "Joanna" or null
+  const langCode = parts[0];   // e.g. "en-US"
+  const voiceName = parts[1];  // e.g. "Joanna"
 
   showMsg(msg, '⏳ Generating MP3... please wait', false);
 
   try {
-    // Correct Puter.js API call - returns HTMLAudioElement
-    let audioEl;
-    if (voice) {
-      audioEl = await puter.ai.txt2speech(txt, {
-        voice: voice,
-        engine: 'neural',
-        language: language
-      });
-    } else {
-      audioEl = await puter.ai.txt2speech(txt, language);
-    }
+    // CORRECT Puter.js API call:
+    // puter.ai.txt2speech(text, language_code)
+    // language_code must be a valid AWS Polly language code
+    const audioEl = await puter.ai.txt2speech(txt, langCode);
 
-    // audioEl is an HTMLAudioElement - get its src (blob URL or remote URL)
+    // audioEl is an HTMLAudioElement
+    // Get the audio src blob URL
     const audioSrc = audioEl.src;
 
-    if (!audioSrc) {
-      throw new Error('No audio source returned');
-    }
+    if (!audioSrc) throw new Error('No audio returned from API');
 
-    // Fetch the audio src as a blob and download it
+    // Fetch the audio as blob and download
     const response = await fetch(audioSrc);
-    if (!response.ok) throw new Error('Failed to fetch audio blob');
+    if (!response.ok) throw new Error('Could not fetch audio data');
 
     const blob = await response.blob();
-    downloadFile(blob, 'voice_' + Date.now() + '.mp3');
-    showMsg(msg, '✅ MP3 downloaded successfully!', false);
+    downloadFile(blob, 'voice_' + voiceName + '_' + Date.now() + '.mp3');
+    showMsg(msg, '✅ MP3 downloaded! Voice: ' + voiceName, false);
 
   } catch (err) {
-    console.error('Puter TTS Error:', err);
+    console.error('TTS Error:', err);
     showMsg(msg, '❌ Error: ' + err.message, true);
   }
 }
