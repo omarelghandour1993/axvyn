@@ -71,68 +71,69 @@ small{display:block;margin-top:5px;color:#999}
 <label>Enter Text:</label>
 <textarea id='ttsText' placeholder='Type or paste text here'></textarea>
 <small id='charCount'>0 / 3000</small>
-<label>Voice (Amazon Polly - Neural):</label>
+<label>Voice:</label>
 <select id='voiceLanguage'>
   <optgroup label='🇺🇸 English (US)'>
-    <option value='Matthew'>English US - Matthew (Male)</option>
-    <option value='Joanna'>English US - Joanna (Female)</option>
-    <option value='Joey'>English US - Joey (Male)</option>
-    <option value='Salli'>English US - Salli (Female)</option>
-    <option value='Kendra'>English US - Kendra (Female)</option>
-    <option value='Kimberly'>English US - Kimberly (Female)</option>
-    <option value='Ruth'>English US - Ruth (Female)</option>
+    <option value='en-US'>English US - Default</option>
+    <option value='en-US|Joanna'>English US - Joanna (Female)</option>
+    <option value='en-US|Matthew'>English US - Matthew (Male)</option>
+    <option value='en-US|Salli'>English US - Salli (Female)</option>
+    <option value='en-US|Joey'>English US - Joey (Male)</option>
+    <option value='en-US|Kendra'>English US - Kendra (Female)</option>
+    <option value='en-US|Kimberly'>English US - Kimberly (Female)</option>
+    <option value='en-US|Ruth'>English US - Ruth (Female)</option>
   </optgroup>
   <optgroup label='🇬🇧 English (UK)'>
-    <option value='Brian'>English UK - Brian (Male)</option>
-    <option value='Amy'>English UK - Amy (Female)</option>
-    <option value='Emma'>English UK - Emma (Female)</option>
+    <option value='en-GB|Amy'>English UK - Amy (Female)</option>
+    <option value='en-GB|Brian'>English UK - Brian (Male)</option>
+    <option value='en-GB|Emma'>English UK - Emma (Female)</option>
   </optgroup>
   <optgroup label='🇪🇸 Spanish'>
-    <option value='Enrique'>Spanish - Enrique (Male)</option>
-    <option value='Conchita'>Spanish - Conchita (Female)</option>
-    <option value='Miguel'>Spanish US - Miguel (Male)</option>
-    <option value='Penelope'>Spanish US - Penelope (Female)</option>
+    <option value='es-ES|Conchita'>Spanish - Conchita (Female)</option>
+    <option value='es-ES|Enrique'>Spanish - Enrique (Male)</option>
+    <option value='es-US|Penelope'>Spanish US - Penelope (Female)</option>
+    <option value='es-US|Miguel'>Spanish US - Miguel (Male)</option>
   </optgroup>
   <optgroup label='🇫🇷 French'>
-    <option value='Mathieu'>French - Mathieu (Male)</option>
-    <option value='Celine'>French - Celine (Female)</option>
-    <option value='Lea'>French - Lea (Female)</option>
+    <option value='fr-FR|Celine'>French - Celine (Female)</option>
+    <option value='fr-FR|Mathieu'>French - Mathieu (Male)</option>
+    <option value='fr-FR|Lea'>French - Lea (Female)</option>
   </optgroup>
   <optgroup label='🇩🇪 German'>
-    <option value='Hans'>German - Hans (Male)</option>
-    <option value='Marlene'>German - Marlene (Female)</option>
-    <option value='Vicki'>German - Vicki (Female)</option>
+    <option value='de-DE|Marlene'>German - Marlene (Female)</option>
+    <option value='de-DE|Hans'>German - Hans (Male)</option>
+    <option value='de-DE|Vicki'>German - Vicki (Female)</option>
   </optgroup>
   <optgroup label='🇮🇹 Italian'>
-    <option value='Giorgio'>Italian - Giorgio (Male)</option>
-    <option value='Carla'>Italian - Carla (Female)</option>
-    <option value='Bianca'>Italian - Bianca (Female)</option>
+    <option value='it-IT|Carla'>Italian - Carla (Female)</option>
+    <option value='it-IT|Giorgio'>Italian - Giorgio (Male)</option>
+    <option value='it-IT|Bianca'>Italian - Bianca (Female)</option>
   </optgroup>
   <optgroup label='🇧🇷 Portuguese'>
-    <option value='Ricardo'>Portuguese BR - Ricardo (Male)</option>
-    <option value='Vitoria'>Portuguese BR - Vitoria (Female)</option>
-    <option value='Cristiano'>Portuguese PT - Cristiano (Male)</option>
-    <option value='Ines'>Portuguese PT - Ines (Female)</option>
+    <option value='pt-BR|Vitoria'>Portuguese BR - Vitoria (Female)</option>
+    <option value='pt-BR|Ricardo'>Portuguese BR - Ricardo (Male)</option>
+    <option value='pt-PT|Ines'>Portuguese PT - Ines (Female)</option>
+    <option value='pt-PT|Cristiano'>Portuguese PT - Cristiano (Male)</option>
   </optgroup>
   <optgroup label='🇷🇺 Russian'>
-    <option value='Maxim'>Russian - Maxim (Male)</option>
-    <option value='Tatyana'>Russian - Tatyana (Female)</option>
+    <option value='ru-RU|Tatyana'>Russian - Tatyana (Female)</option>
+    <option value='ru-RU|Maxim'>Russian - Maxim (Male)</option>
   </optgroup>
   <optgroup label='🇸🇦 Arabic'>
-    <option value='Zeina'>Arabic - Zeina (Female)</option>
+    <option value='ar-SA|Zeina'>Arabic - Zeina (Female)</option>
   </optgroup>
   <optgroup label='🇯🇵 Japanese'>
-    <option value='Takumi'>Japanese - Takumi (Male)</option>
-    <option value='Mizuki'>Japanese - Mizuki (Female)</option>
+    <option value='ja-JP|Mizuki'>Japanese - Mizuki (Female)</option>
+    <option value='ja-JP|Takumi'>Japanese - Takumi (Male)</option>
   </optgroup>
   <optgroup label='🇨🇳 Chinese'>
-    <option value='Zhiyu'>Chinese - Zhiyu (Female)</option>
+    <option value='zh-CN|Zhiyu'>Chinese - Zhiyu (Female)</option>
   </optgroup>
   <optgroup label='🇮🇳 Hindi'>
-    <option value='Aditi'>Hindi - Aditi (Female)</option>
+    <option value='hi-IN|Aditi'>Hindi - Aditi (Female)</option>
   </optgroup>
   <optgroup label='🇰🇷 Korean'>
-    <option value='Seoyeon'>Korean - Seoyeon (Female)</option>
+    <option value='ko-KR|Seoyeon'>Korean - Seoyeon (Female)</option>
   </optgroup>
 </select>
 <label>Speech Rate (Play only):</label>
@@ -209,7 +210,6 @@ small{display:block;margin-top:5px;color:#999}
 <!-- Libraries -->
 <script src='https://cdn.jsdelivr.net/npm/mammoth@1.4.20/mammoth.browser.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'></script>
-<!-- Puter.js: Free Amazon Polly TTS - No signup, No API key -->
 <script src='https://js.puter.com/v2/'></script>
 
 <script>
@@ -302,7 +302,7 @@ document.getElementById('ttsText').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length + ' / 3000';
 });
 
-// Play using browser built-in voices
+// Play using browser built-in TTS
 function playText() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
@@ -323,45 +323,53 @@ function stopAudio() {
   document.getElementById('ttsMsg').classList.remove('show');
 }
 
-// Download using Puter.js (Amazon Polly Neural TTS)
+// Download using Puter.js (correct API usage)
 async function downloadAudio() {
   const txt = document.getElementById('ttsText').value.trim();
   const msg = 'ttsMsg';
-  const voice = document.getElementById('voiceLanguage').value;
 
   if (!txt) { showMsg(msg, 'Enter some text', true); return; }
   if (txt.length > 3000) { showMsg(msg, 'Max 3000 characters. You have ' + txt.length, true); return; }
 
-  showMsg(msg, '⏳ Generating MP3 via Amazon Polly... please wait', false);
+  // Parse voice and language from select
+  const selected = document.getElementById('voiceLanguage').value;
+  const parts = selected.split('|');
+  const language = parts[0];         // e.g. "en-US"
+  const voice = parts[1] || null;    // e.g. "Joanna" or null
+
+  showMsg(msg, '⏳ Generating MP3... please wait', false);
 
   try {
-    // Use Puter.js free Amazon Polly TTS
-    const audio = await puter.ai.txt2speech(txt, voice);
-
-    // audio is a URL or blob - handle both cases
-    if (typeof audio === 'string') {
-      // It's a URL - fetch and download
-      const response = await fetch(audio);
-      const blob = await response.blob();
-      downloadFile(blob, 'voice_' + Date.now() + '.mp3');
-      showMsg(msg, '✅ MP3 downloaded! (Amazon Polly Neural Voice)', false);
-    } else if (audio instanceof Blob) {
-      downloadFile(audio, 'voice_' + Date.now() + '.mp3');
-      showMsg(msg, '✅ MP3 downloaded! (Amazon Polly Neural Voice)', false);
+    // Correct Puter.js API call - returns HTMLAudioElement
+    let audioEl;
+    if (voice) {
+      audioEl = await puter.ai.txt2speech(txt, {
+        voice: voice,
+        engine: 'neural',
+        language: language
+      });
     } else {
-      // Try to use it as audio element
-      const audioEl = new Audio(audio);
-      audioEl.oncanplay = async function() {
-        const response = await fetch(audio);
-        const blob = await response.blob();
-        downloadFile(blob, 'voice_' + Date.now() + '.mp3');
-        showMsg(msg, '✅ MP3 downloaded! (Amazon Polly Neural Voice)', false);
-      };
+      audioEl = await puter.ai.txt2speech(txt, language);
     }
 
+    // audioEl is an HTMLAudioElement - get its src (blob URL or remote URL)
+    const audioSrc = audioEl.src;
+
+    if (!audioSrc) {
+      throw new Error('No audio source returned');
+    }
+
+    // Fetch the audio src as a blob and download it
+    const response = await fetch(audioSrc);
+    if (!response.ok) throw new Error('Failed to fetch audio blob');
+
+    const blob = await response.blob();
+    downloadFile(blob, 'voice_' + Date.now() + '.mp3');
+    showMsg(msg, '✅ MP3 downloaded successfully!', false);
+
   } catch (err) {
-    showMsg(msg, '❌ Error: ' + err.message + '. Please try again.', true);
     console.error('Puter TTS Error:', err);
+    showMsg(msg, '❌ Error: ' + err.message, true);
   }
 }
 
